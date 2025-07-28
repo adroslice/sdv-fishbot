@@ -156,7 +156,7 @@ internal sealed class ModEntry : Mod
         }
         else FA_PrioTreasure = false;
         var targetPos = FA_PrioTreasure
-            ? (Math.Abs(bar.treasurePosition - bar.bobberPosition) < bar.bobberBarHeight * 0.8f
+            ? (Math.Abs(bar.treasurePosition - bar.bobberPosition) < bar.bobberBarHeight * Config.FA_DualTargetingBarPercentage
                 ? (bar.treasurePosition + bar.bobberPosition) / 2 // Target both if they fit within a 10% margin of the fishing bar
                 : bar.treasurePosition)                           // Otherwise, just go for the treasure
             : Math.Clamp( // When targeting the fish, try to predict its future position without overshooting its own target...

@@ -19,6 +19,7 @@ public sealed class ModConfig
     // FishingAutomaton+ Strategy Parameters
     public int FA_PredictLinearFrames { get; set; } = 5;
     public float FA_RelativeOffsetBarPercentage { get; set; } = 0.7f;
+    public float FA_DualTargetingBarPercentage { get; set; } = 0.8f;
     public float FA_PrioTreasureAbove { get; set; } = 0.70f;
     public float FA_PrioFishBelow { get; set; } = 0.35f;
     public float FA_MinBarTargetVelocity { get; set; } = 1.0F;
@@ -86,7 +87,7 @@ public sealed class ModConfig
             tooltip: () => "You can fine tune the variables of this fishing strategy here."
         );
 
-        configMenu.AddPage(mod: mod, pageId: nameof(ModEntry.MinigameStrategyFishingAutomatonPlus), pageTitle: () => "\"FishingAutomaton+\" Strategy");
+        configMenu.AddPage(mod: mod, pageId: nameof(ModEntry.MinigameStrategyFishingAutomatonPlus), pageTitle: () => "FishingAutomatonPlus Strategy");
         configMenu.AddNumberOption(
             mod: mod,
             getValue: () => this.FA_PredictLinearFrames,
@@ -103,6 +104,16 @@ public sealed class ModConfig
             setValue: value => this.FA_RelativeOffsetBarPercentage = value,
             name: () => nameof(this.FA_RelativeOffsetBarPercentage),
             tooltip: () => "Fishing bar offset towards the track center relative to size (multiplied by this value) and position. Use 0 for always keeping it centered. (Fish are more likely to move towards the center)",
+            min: 0.0f,
+            max: 1f,
+            interval: 0.01f
+        );
+        configMenu.AddNumberOption(
+            mod: mod,
+            getValue: () => this.FA_DualTargetingBarPercentage,
+            setValue: value => this.FA_DualTargetingBarPercentage = value,
+            name: () => nameof(this.FA_DualTargetingBarPercentage),
+            tooltip: () => "Amount of the fishing bar that both fish and treasure have to fit within to target both at once. Use 0.0 to avoid dual targeting.",
             min: 0.0f,
             max: 1f,
             interval: 0.01f
