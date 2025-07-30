@@ -10,7 +10,7 @@ using Microsoft.Xna.Framework.Graphics;
 
 internal sealed class ModEntry : Mod
 {
-    private ModConfig Config = new ModConfig();
+    public static ModConfig Config = new ModConfig();
     private bool AutomationEnabled = false;
     private MethodInfo? SmapiInternalOverrideButtonMethod;
     private void ClickIf(bool cond) => SmapiInternalOverrideButtonMethod?.Invoke(Game1.input, new object[] { SButton.C, cond });
@@ -34,11 +34,11 @@ internal sealed class ModEntry : Mod
 
         configMenu.Register(
             mod: this.ModManifest,
-            reset: () => this.Config = new ModConfig(),
-            save: () => this.Helper.WriteConfig(this.Config)
+            reset: () => Config = new ModConfig(),
+            save: () => this.Helper.WriteConfig(Config)
         );
 
-        Config.SetupConfigOptions(configMenu, this.ModManifest);
+        ModConfig.SetupConfigOptions(configMenu, this.ModManifest);
     }
 
     // Toggles the Automations
