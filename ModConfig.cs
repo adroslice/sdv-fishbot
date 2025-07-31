@@ -16,7 +16,7 @@ public sealed class ModConfig
     public float MaxCastPercentage { get; set; } = 1f;
 
     // Utility
-    public bool EnableBubbleRadar { get; set; } = true;
+    public bool EnableBubbleRadar { get; set; } = false;
 
     // FishingAutomaton+ Strategy Parameters
     public int FA_PredictLinearFrames { get; set; } = 5;
