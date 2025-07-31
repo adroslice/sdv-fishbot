@@ -112,10 +112,10 @@ internal sealed class ModEntry : Mod
         automation();
     }
 
-    private enum FishingState { Idle, ReadyToCast, TimingCast, Casting, Waiting, Nibbling, Playing, ShowingTreasure, FishCaught }
+    private enum FishingState { Idle, ReadyToCast, TimingCast, Casting, Waiting, Nibbling, Playing, ShowingTreasure, FishCaught, FishEscaped }
     private FishingState GetFishingState(FishingRod rod) => true switch
     {
-        _ when Game1.activeClickableMenu is BobberBar => FishingState.Playing,
+        _ when Game1.activeClickableMenu is BobberBar bar => bar.distanceFromCatching > 0f ? FishingState.Playing : FishingState.FishEscaped,
         _ when Game1.activeClickableMenu is ItemGrabMenu => FishingState.ShowingTreasure,
         _ when rod.fishCaught => FishingState.FishCaught,
         _ when rod.isNibbling && !rod.isReeling && !rod.showingTreasure && !rod.treasureCaught => FishingState.Nibbling,
@@ -148,23 +148,26 @@ internal sealed class ModEntry : Mod
         // Derived values
         float barCenter = bar.bobberBarPos + (bar.bobberBarHeight / 2) - 30f; // 30f here is a correction offset stemming from the bobbers height
         float barMax = BobberBar.bobberBarTrackHeight - bar.bobberBarHeight;
+        float treasureBobberDistance = Math.Abs(bar.treasurePosition - bar.bobberPosition);
+        float dualTargetAllowance = bar.bobberBarHeight * Config.FA_DualTargetingBarPercentage;
+        float centerBiasAllowance = bar.bobberBarHeight * Config.FA_RelativeOffsetBarPercentage;
 
-        // Target selection
+        // Target prioritization
         if (bar.treasure && bar.treasurePosition > 0 && !bar.treasureCaught)
         {
             if (bar.distanceFromCatching > Config.FA_PrioTreasureAbove) FA_PrioTreasure = true;
             else if (bar.distanceFromCatching < Config.FA_PrioFishBelow) FA_PrioTreasure = false;
         }
         else FA_PrioTreasure = false;
-        var targetPos = FA_PrioTreasure
-            ? (Math.Abs(bar.treasurePosition - bar.bobberPosition) < bar.bobberBarHeight * Config.FA_DualTargetingBarPercentage
-                ? (bar.treasurePosition + bar.bobberPosition) / 2 // Target both if they fit within a 10% margin of the fishing bar
-                : bar.treasurePosition)                           // Otherwise, just go for the treasure
-            : Math.Clamp( // When targeting the fish, try to predict its future position without overshooting its own target...
+
+        var targetPos =
+            !bar.treasureCaught && (treasureBobberDistance < dualTargetAllowance) ? (bar.treasurePosition + bar.bobberPosition) / 2 : // Both if within allowance
+            FA_PrioTreasure ? bar.treasurePosition : // Treasure if prioritized
+            Math.Clamp( // Fish, try to predict its future position without overshooting its own target...
                 bar.bobberPosition + bar.bobberSpeed * Config.FA_PredictLinearFrames,
                 Math.Min(bar.bobberTargetPosition, bar.bobberPosition),
-                Math.Max(bar.bobberTargetPosition, bar.bobberPosition) // ... and add an offset relative to the bars position and size to bias the bar towards the center and improve reactions to the most common moves
-            ) + bar.bobberBarHeight * Config.FA_RelativeOffsetBarPercentage / 2 - ((bar.bobberPosition / BobberBar.bobberTrackHeight) * bar.bobberBarHeight * Config.FA_RelativeOffsetBarPercentage);
+                Math.Max(bar.bobberTargetPosition, bar.bobberPosition) // ... and bias towards the center based on allowance and current position on the track
+            ) + centerBiasAllowance / 2 - ((bar.bobberPosition / BobberBar.bobberTrackHeight) * centerBiasAllowance);
 
         // Enforce general speed limit
         if (Math.Abs(bar.bobberBarSpeed) > Config.FA_MaxBarVelocity)
