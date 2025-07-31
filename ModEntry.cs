@@ -4,21 +4,22 @@ using StardewModdingAPI.Events;
 using StardewValley;
 using StardewValley.Tools;
 using StardewValley.Menus;
-using System.Reflection;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 
 internal sealed class ModEntry : Mod
 {
-    public static ModConfig Config = new ModConfig();
+    public static ModConfig Config = new();
     private bool AutomationEnabled = false;
-    private MethodInfo? SmapiInternalOverrideButtonMethod;
-    private void ClickIf(bool cond) => SmapiInternalOverrideButtonMethod?.Invoke(Game1.input, new object[] { SButton.C, cond });
+    private void ClickIf(bool cond) => OverrideButton(SButton.C, cond);
+    private Action<SButton, bool> OverrideButton = (_, _) => { };
 
     public override void Entry(IModHelper helper)
     {
-        SmapiInternalOverrideButtonMethod = Game1.input.GetType().GetMethod("OverrideButton")
-           ?? throw new InvalidOperationException("Can't find 'OverrideButton' method on SMAPI's input class. This means the mod needs to be updated to use a new input simulation method.");
+        Config = this.Helper.ReadConfig<ModConfig>() ?? new();
+
+        OverrideButton = (Action<SButton, bool>)Delegate.CreateDelegate(typeof(Action<SButton, bool>), Game1.input, Game1.input.GetType().GetMethod("OverrideButton")
+           ?? throw new InvalidOperationException("Can't find 'OverrideButton' method on SMAPI's input class. This means the mod needs to be updated to use a new input simulation method."));
 
         helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
         helper.Events.Input.ButtonPressed += this.OnButtonPressed;
@@ -34,7 +35,7 @@ internal sealed class ModEntry : Mod
 
         configMenu.Register(
             mod: this.ModManifest,
-            reset: () => Config = new ModConfig(),
+            reset: () => Config = new(),
             save: () => this.Helper.WriteConfig(Config)
         );
 
@@ -133,7 +134,7 @@ internal sealed class ModEntry : Mod
         for (int i = actualInventory.Count - 1; i >= 0; i--)
             if (Game1.player.addItemToInventoryBool(actualInventory[i]))
             {
-                Game1.addHUDMessage(new HUDMessage(actualInventory[i].DisplayName) { messageSubject = actualInventory[i] });
+                Game1.addHUDMessage(new(actualInventory[i].DisplayName) { messageSubject = actualInventory[i] });
                 actualInventory.RemoveAt(i);
             }
 
