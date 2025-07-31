@@ -102,7 +102,7 @@ internal sealed class ModEntry : Mod
         Action automation = GetFishingState(rod) switch
         {
             FishingState.ReadyToCast when Config.DoAutoCast => () => ClickIf(true),
-            FishingState.TimingCast when Config.DoAutoCast => () => ClickIf(!(rod.castingPower >= 0.99f)),
+            FishingState.TimingCast when Config.DoAutoCast => () => ClickIf(!(rod.castingPower >= (Config.MaxCastPercentage - 0.01f))),
             FishingState.Nibbling when Config.DoAutoHit => () => rod.endUsing(Game1.currentLocation, Game1.player),
             FishingState.Playing when Config.DoAutoPlay => () => ClickIf(MinigameStrategyFishingAutomatonPlus((BobberBar)Game1.activeClickableMenu)),
             FishingState.ShowingTreasure when Config.DoAutoLoot => () => AcquireTreasure((ItemGrabMenu)Game1.activeClickableMenu),

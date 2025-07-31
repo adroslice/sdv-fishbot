@@ -13,6 +13,8 @@ public sealed class ModConfig
     public bool DoAutoStow { get; set; } = true;
     public bool DoAutoLoot { get; set; } = true;
 
+    public float MaxCastPercentage { get; set; } = 1f;
+
     // Utility
     public bool EnableBubbleRadar { get; set; } = true;
 
@@ -68,6 +70,14 @@ public sealed class ModConfig
             name: () => "Auto-Loot Treasure",
             getValue: () => ModEntry.Config.DoAutoLoot,
             setValue: value => { ModEntry.Config.DoAutoLoot = value; }
+        );
+        configMenu.AddNumberOption(
+            mod: mod,
+            name: () => "Max Cast Percentage",
+            getValue: () => ModEntry.Config.MaxCastPercentage,
+            setValue: value => { ModEntry.Config.MaxCastPercentage = value; },
+            min: 0.01f,
+            max: 1f
         );
 
         configMenu.AddSectionTitle(mod: mod, text: () => "Utility", tooltip: () => "Little features to improve your fishing experience.");
