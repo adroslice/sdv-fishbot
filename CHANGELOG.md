@@ -1,5 +1,5 @@
 # Version History
-## Version 0.0.x: Alpha
+## Minor Release 0.0.x: Alpha
 ### Patch 0.0.1
 - Initial Release
 
@@ -9,3 +9,10 @@
 ### Patch 0.0.3
 - Fixed mod options never getting loaded from the file
 - Improved input simulation performance by avoiding repeated reflection
+
+## Minor Release 0.1.0: Beta
+- Fixed fishbot not casting again sometimes after failing a catch
+  - This was the last known major issue that kept fishbot in alpha
+- FishingAutomatonPlus Strategy:
+  - Gave strategy parameters more descriptive display names and some better descriptions
+  - Allowed dual targeting to take effect while prioritizing fish, can help perfect-catch-with-treasure more often and matches human behavior better
