@@ -1,6 +1,6 @@
 # Fishbot
 This is a Stardew Valley mod that can automate the following tasks in a way that doesn't feel cheaty:
-- Casting your fishing rod
+- Casting your fishing rod by a configurable maximum distance
 - Reeling in a fish when it nibbles
 - **Emulate a real player in playing the fishing minigame by using a sophisticated strategy, catching fish and treasure**
 - Stow away your catch
@@ -23,11 +23,11 @@ All significant parameters can be modified through the configuration, though the
 ### Here's how it works:
 1. Decide to prioritize the fish or the treasure based on two configurable capture progress thresholds
 2. Determine a Target Position:
-   - If it's currently prioritizing treasure:
-     - [E] Go for both it and the fish if they fit within a configurable percentage of the fishing bar
-   - Otherwise, target the fish with the following adjustments:
-     - [E] A configurable number of frames of continued linear movement of the fish predicted (But never overshooting the fishs own internal target position)
-     - [E] A bias towards the center of the track because further down a fish is more likely to move up, with a configurable padding to keep the fish well within the fishing bar's target area
+  - [E] Go for both if fish and treasure fit within a configurable percentage of the fishing bar
+  - Go for treasure if prioritized
+  - Otherwise, target the fish with the following adjustments:
+    - [E] A configurable number of frames of continued linear movement of the fish predicted (But never overshooting the fishs own internal target position)
+    - [E] A bias towards the center of the track because further down a fish is more likely to move up, with a configurable padding to keep the fish well within the fishing bar's target area
 3. Apply these rules in sequence:
    - If the *fishing bar is exceeding a configurable maximum velocity*, **brake**
    - If the *target is already inside the bar*, and it is *going faster than a target velocity* that scales down depending on how close it is (using a parabolic function), **brake**
@@ -36,11 +36,12 @@ All significant parameters can be modified through the configuration, though the
 
 ### Here's how it performs:
 I have tested this strategy on a rainy day of early spring, starting on fishing level 5 and going all the way up to level 8 across 300 catches. While in a small window, it never missed **any** catches, and got ~15% perfect catches on Catfish. Unless it was going for treasure, it managed to perfect catch almost every chub.
+On a max-luck day, with fishing level 10 and nothing more than a fiberglass rod and regular bait, it managed to perfect catch 36% of catfish.
 
 I am still investigating why having the game in fullscreen seems to negatively affect the performance of this strategy. At the moment, I can only assume it's an issue of reduced update rates.
 
 ## About Control
-I set myself a goal of not using Harmony patches for this mod. While I've succeeded so far, I should note that the way I'm **directly** emulating key presses through
+I set myself a goal of not using Harmony patches for this mod. While I've succeeded so far, I should note that the way I'm **directly** emulating key presses through SMAPIs internal method has the downside of not working in the background.
 
 ## Future Plans
 These features are on my radar, but won't be implemented unless they're requested or I find a personal need for them.
@@ -48,8 +49,7 @@ These features are on my radar, but won't be implemented unless they're requeste
 - Auto-Eat with an Energy:Money threshold
 - Auto-Buff with Jellies and other fishing/luck foods
 - Auto-Pause on Hunger or a configurable Time (i.e. 1AM)
-- Diagnostic Overlay for developing or just appreciating the
+- Diagnostic Overlay for developing or just appreciating the algorithm at work
 - Another way of simulating input. The current method only seems to work when the game window has focus, and it would be nice if it could run in the background.
-- Configurable delays for recasting and looting treasure
-- A configurable max cast percentage
+- Configurable delays for auto-cast, auto-hit and looting treasure
 - A way to offset the fishing rod cast (for hitting tricky bubble spots)
