@@ -16,3 +16,9 @@
 - FishingAutomatonPlus Strategy:
   - Gave strategy parameters more descriptive display names and some better descriptions
   - Allowed dual targeting to take effect while prioritizing fish, can help perfect-catch-with-treasure more often and matches human behavior better
+
+## Minor Release 0.2.0
+- Added Auto-Eating (and Auto-Pausing when disabled) below 10 energy, with a configurable max Sell Price to Energy threshold
+- Added Auto-Pausing after a configurable time
+- Added a Max Cast Distance parameter (useful for min-casting with a training rod on day 2)
+- Turned bubble radar off by default to avoid further cluttering the UI of users with many mods
