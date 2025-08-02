@@ -13,6 +13,9 @@ internal sealed class ModEntry : Mod
     private bool AutomationEnabled = false;
     private void ClickIf(bool cond) => OverrideButton(SButton.C, cond);
     private Action<SButton, bool> OverrideButton = (_, _) => { };
+    private int? restorableDirection = null;
+    private bool pausedTimeToday = false;
+    private bool PassedPauseTime => !pausedTimeToday && Game1.timeOfDay % 2400 >= Config.PauseAfterTime && Game1.timeOfDay % 2400 < Config.PauseAfterTime + 100;
 
     public override void Entry(IModHelper helper)
     {
@@ -22,6 +25,7 @@ internal sealed class ModEntry : Mod
            ?? throw new InvalidOperationException("Can't find 'OverrideButton' method on SMAPI's input class. This means the mod needs to be updated to use a new input simulation method."));
 
         helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
+        helper.Events.GameLoop.DayStarted += (_, _) => pausedTimeToday = false;
         helper.Events.Input.ButtonPressed += this.OnButtonPressed;
         helper.Events.GameLoop.UpdateTicked += this.OnUpdate;
         helper.Events.Display.RenderingHud += OnRenderingHud;
@@ -101,6 +105,9 @@ internal sealed class ModEntry : Mod
 
         Action automation = GetFishingState(rod) switch
         {
+            FishingState.LowStamina => HandleLowStamina,
+            FishingState.ReadyToCast when restorableDirection != null => RestoreDirection,
+            FishingState.ReadyToCast when PassedPauseTime => PauseAfterTime,
             FishingState.ReadyToCast when Config.DoAutoCast => () => ClickIf(true),
             FishingState.TimingCast when Config.DoAutoCast => () => ClickIf(!(rod.castingPower >= (Config.MaxCastPercentage - 0.01f))),
             FishingState.Nibbling when Config.DoAutoHit => () => rod.endUsing(Game1.currentLocation, Game1.player),
@@ -112,7 +119,7 @@ internal sealed class ModEntry : Mod
         automation();
     }
 
-    private enum FishingState { Idle, ReadyToCast, TimingCast, Casting, Waiting, Nibbling, Playing, ShowingTreasure, FishCaught, FishEscaped }
+    private enum FishingState { Idle, ReadyToCast, TimingCast, Casting, Waiting, Nibbling, Playing, ShowingTreasure, FishCaught, FishEscaped, LowStamina }
     private FishingState GetFishingState(FishingRod rod) => true switch
     {
         _ when Game1.activeClickableMenu is BobberBar bar => bar.distanceFromCatching > 0f ? FishingState.Playing : FishingState.FishEscaped,
@@ -122,9 +129,46 @@ internal sealed class ModEntry : Mod
         _ when rod.isFishing && !rod.isNibbling && !rod.hit => FishingState.Waiting,
         _ when rod.isTimingCast => FishingState.TimingCast,
         _ when rod.isCasting || rod.castedButBobberStillInAir => FishingState.Casting,
-        _ when Context.CanPlayerMove && Game1.activeClickableMenu == null => FishingState.ReadyToCast,
+        _ when Context.CanPlayerMove && Game1.activeClickableMenu == null => Game1.player.Stamina < 10f ? FishingState.LowStamina : FishingState.ReadyToCast,
         _ => FishingState.Idle
     };
+
+    // Keep faced direction after eating and override other mods orientation restore broken by eating without menu
+    private void RestoreDirection()
+    {
+        if (restorableDirection == null) return;
+        Game1.player.faceDirection(restorableDirection.Value);
+        restorableDirection = null;
+    }
+
+    private void PauseAfterTime()
+    {
+        AutomationEnabled = false;
+        Game1.activeClickableMenu = new GameMenu();
+        pausedTimeToday = true;
+        Game1.addHUDMessage(new("Configured time has passed, Fishbot disabled!") { messageSubject = Game1.player.CurrentItem });
+    }
+
+    // On low energy, auto-disable fishbot or auto eat as configured
+    private void HandleLowStamina()
+    {
+        if (Config.DoAutoEat
+            && Game1.player.Items.OfType<Object>().Where(i => i.staminaRecoveredOnConsumption() > 0)
+                .MinBy(i => (float)i.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)i.staminaRecoveredOnConsumption())
+                is Item bestItem
+            && ((float)bestItem.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)bestItem.staminaRecoveredOnConsumption()) <= Config.MaxSGPE
+        )
+        {
+            restorableDirection = Game1.player.FacingDirection;
+            Game1.player.Items.Reduce(bestItem, 1);
+            Game1.player.eatObject(bestItem as Object);
+            return;
+        }
+
+        AutomationEnabled = false;
+        Game1.activeClickableMenu = new GameMenu();
+        Game1.addHUDMessage(new("Low energy, Fishbot disabled!") { messageSubject = Game1.player.CurrentItem });
+    }
 
     // Grabs all treasure from a GrabMenu and exits only if it could get out everything.
     private void AcquireTreasure(ItemGrabMenu menu)

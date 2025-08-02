@@ -1,4 +1,6 @@
 namespace Fishbot;
+
+using System.Text.RegularExpressions;
 using StardewModdingAPI;
 
 public sealed class ModConfig
@@ -6,14 +8,20 @@ public sealed class ModConfig
     // Keybinds
     public SButton ToggleAutomationKey { get; set; } = SButton.F5;
 
-    // Automations
+    // Core Automations
     public bool DoAutoCast { get; set; } = true;
     public bool DoAutoHit { get; set; } = true;
     public bool DoAutoPlay { get; set; } = true;
     public bool DoAutoStow { get; set; } = true;
     public bool DoAutoLoot { get; set; } = true;
 
+    // Secondary Automations
+    public bool DoAutoEat { get; set; } = true;
+
+    // Automation Options
     public float MaxCastPercentage { get; set; } = 1f;
+    public float MaxSGPE { get; set; } = 1.93f; // 125/65e for Iridium Chub and Fisher profession
+    public int PauseAfterTime { get; set; } = 0130;
 
     // Utility
     public bool EnableBubbleRadar { get; set; } = false;
@@ -29,6 +37,7 @@ public sealed class ModConfig
     public float FA_MaxBarVelocity { get; set; } = 6.0F;
     public float FA_BottomThreshold { get; set; } = 30f;
 
+    private static Regex TimeRE = new Regex(@"^\d\d:\d\d$");
     public static void SetupConfigOptions(IGenericModConfigMenuApi configMenu, IManifest mod)
     {
         configMenu.AddSectionTitle(mod: mod, text: () => "Keybinds");
@@ -71,13 +80,42 @@ public sealed class ModConfig
             getValue: () => ModEntry.Config.DoAutoLoot,
             setValue: value => { ModEntry.Config.DoAutoLoot = value; }
         );
+        configMenu.AddBoolOption(
+            mod: mod,
+            name: () => "Auto-Eat",
+            getValue: () => ModEntry.Config.DoAutoEat,
+            setValue: value => { ModEntry.Config.DoAutoEat = value; },
+            tooltip: () => "When disabled, automatically pause the game at low energy."
+        );
         configMenu.AddNumberOption(
             mod: mod,
             name: () => "Max Cast Percentage",
             getValue: () => ModEntry.Config.MaxCastPercentage,
             setValue: value => { ModEntry.Config.MaxCastPercentage = value; },
             min: 0.01f,
-            max: 1f
+            max: 1f,
+            interval: 0.01f
+        );
+        configMenu.AddNumberOption(
+            mod: mod,
+            name: () => "Auto-Eat Max sGPE",
+            getValue: () => ModEntry.Config.MaxSGPE,
+            setValue: value => { ModEntry.Config.MaxSGPE = value; },
+            min: 0f,
+            max: 5f,
+            interval: 0.01f,
+            tooltip: () => "Will pause instead of eating if all available food exceeds this Sell Price to Energy threshold. (e.g. 1.93 for an iridium chub with the Fisher profession)"
+        );
+        configMenu.AddNumberOption(
+            mod: mod,
+            name: () => "Pause after",
+            getValue: () => ModEntry.Config.PauseAfterTime % 100 + ModEntry.Config.PauseAfterTime / 100 * 60,
+            setValue: value => ModEntry.Config.PauseAfterTime = value % 60 + value / 60 * 100,
+            formatValue: value => $"{value / 60:D2}:{value % 60:D2}",
+            tooltip: () => "Once per day, pause after this time (24h format). Use 02:00 to disable.",
+            min: 0,
+            max: 24 * 60,
+            interval: 10
         );
 
         configMenu.AddSectionTitle(mod: mod, text: () => "Utility", tooltip: () => "Little features to improve your fishing experience.");
