@@ -5,6 +5,9 @@ This is a Stardew Valley mod that can automate the following tasks in a way that
 - **Emulate a real player in playing the fishing minigame by using a sophisticated strategy, catching fish and treasure**
 - Stow away your catch
 - Loot any caught treasure
+- Eat the best available food when falling below 10 energy with a configurable max sGPE (Sell-Price in G per Energy)
+- Pause (by opening the menu) when falling below 10 energy if auto-eating is disabled or no good food is available
+- Pause once per day after a configurable time
 
 Any of these can be disabled individually in the configuration (GMCM is supported), much like the handy little **Bubble Radar** that'll point you to success.
 
@@ -46,9 +49,7 @@ I set myself a goal of not using Harmony patches for this mod. While I've succee
 ## Future Plans
 These features are on my radar, but won't be implemented unless they're requested or I find a personal need for them.
 - Add other selectable minigame strategies should I discover a better algorithm
-- Auto-Eat with an Energy:Money threshold
 - Auto-Buff with Jellies and other fishing/luck foods
-- Auto-Pause on Hunger or a configurable Time (i.e. 1AM)
 - Diagnostic Overlay for developing or just appreciating the algorithm at work
 - Another way of simulating input. The current method only seems to work when the game window has focus, and it would be nice if it could run in the background.
 - Configurable delays for auto-cast, auto-hit and looting treasure
