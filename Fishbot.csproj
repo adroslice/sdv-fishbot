@@ -4,6 +4,7 @@
     <RootNamespace>Fishbot</RootNamespace>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <EnableHarmony>True</EnableHarmony>
   </PropertyGroup>
 
   <ItemGroup>

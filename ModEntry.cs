@@ -6,11 +6,13 @@ using StardewValley.Tools;
 using StardewValley.Menus;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using HarmonyLib;
+using System.Linq;
 
 internal sealed class ModEntry : Mod
 {
     public static ModConfig Config = new();
-    private bool AutomationEnabled = false;
+    private static bool AutomationEnabled = false;
     private void ClickIf(bool cond) => OverrideButton(SButton.C, cond);
     private Action<SButton, bool> OverrideButton = (_, _) => { };
     private int? restorableDirection = null;
@@ -24,11 +26,28 @@ internal sealed class ModEntry : Mod
         OverrideButton = (Action<SButton, bool>)Delegate.CreateDelegate(typeof(Action<SButton, bool>), Game1.input, Game1.input.GetType().GetMethod("OverrideButton")
            ?? throw new InvalidOperationException("Can't find 'OverrideButton' method on SMAPI's input class. This means the mod needs to be updated to use a new input simulation method."));
 
+        var harmony = new Harmony(ModManifest.UniqueID);
+        harmony.Patch(
+            original: AccessTools.PropertyGetter(
+                "Microsoft.Xna.Framework.GamePlatform:IsActive"
+            ),
+            postfix: new HarmonyMethod(this.GetType(), nameof(this.Post_XNA_GamePlatform_IsActive))
+        );
+
         helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
-        helper.Events.GameLoop.DayStarted += (_, _) => pausedTimeToday = false;
+        helper.Events.GameLoop.DayStarted += (_, _) =>
+        {
+            pausedTimeToday = false;
+            AutomationEnabled = false;
+        };
         helper.Events.Input.ButtonPressed += this.OnButtonPressed;
         helper.Events.GameLoop.UpdateTicked += this.OnUpdate;
         helper.Events.Display.RenderingHud += OnRenderingHud;
+    }
+
+    public static void Post_XNA_GamePlatform_IsActive(ref bool __result)
+    {
+        if (AutomationEnabled) __result = true;
     }
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
@@ -205,7 +224,7 @@ internal sealed class ModEntry : Mod
         else FA_PrioTreasure = false;
 
         var targetPos =
-            !bar.treasureCaught && (treasureBobberDistance < dualTargetAllowance) ? (bar.treasurePosition + bar.bobberPosition) / 2 : // Both if within allowance
+            !bar.treasureCaught && bar.treasurePosition != 0 && (treasureBobberDistance < dualTargetAllowance) ? (bar.treasurePosition + bar.bobberPosition) / 2 : // Both if within allowance
             FA_PrioTreasure ? bar.treasurePosition : // Treasure if prioritized
             Math.Clamp( // Fish, try to predict its future position without overshooting its own target...
                 bar.bobberPosition + bar.bobberSpeed * Config.FA_PredictLinearFrames,
