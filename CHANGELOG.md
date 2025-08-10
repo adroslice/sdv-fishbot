@@ -22,3 +22,9 @@
 - Added Auto-Pausing after a configurable time
 - Added a Max Cast Distance parameter (useful for min-casting with a training rod on day 2)
 - Turned bubble radar off by default to avoid further cluttering the UI of users with many mods
+
+### Patch 0.2.1
+- Added formatting for percentage-based settings
+- Fixed regression that caused the fishing bar to stick to the top because it thinks there's a treasure there
+- Made Fishbot disable itself on a new morning to avoid auto casting after passing out
+- Added an experimental backgrounding fix, pending a way to simulate mouse position while the window is inactive
