@@ -37,7 +37,7 @@ public sealed class ModConfig
     public float FA_MaxBarVelocity { get; set; } = 6.0F;
     public float FA_BottomThreshold { get; set; } = 30f;
 
-    private static Regex TimeRE = new Regex(@"^\d\d:\d\d$");
+    public static string FormatPercentage(float x) => $"{x * 100}%";
     public static void SetupConfigOptions(IGenericModConfigMenuApi configMenu, IManifest mod)
     {
         configMenu.AddSectionTitle(mod: mod, text: () => "Keybinds");
@@ -94,7 +94,8 @@ public sealed class ModConfig
             setValue: value => { ModEntry.Config.MaxCastPercentage = value; },
             min: 0.01f,
             max: 1f,
-            interval: 0.01f
+            interval: 0.01f,
+            formatValue: FormatPercentage
         );
         configMenu.AddNumberOption(
             mod: mod,
@@ -111,11 +112,11 @@ public sealed class ModConfig
             name: () => "Pause after",
             getValue: () => ModEntry.Config.PauseAfterTime % 100 + ModEntry.Config.PauseAfterTime / 100 * 60,
             setValue: value => ModEntry.Config.PauseAfterTime = value % 60 + value / 60 * 100,
-            formatValue: value => $"{value / 60:D2}:{value % 60:D2}",
             tooltip: () => "Once per day, pause after this time (24h format). Use 02:00 to disable.",
             min: 0,
             max: 24 * 60,
-            interval: 10
+            interval: 10,
+            formatValue: value => $"{value / 60:D2}:{value % 60:D2}"
         );
 
         configMenu.AddSectionTitle(mod: mod, text: () => "Utility", tooltip: () => "Little features to improve your fishing experience.");
@@ -154,7 +155,8 @@ public sealed class ModConfig
             tooltip: () => "Keep target within the given portion of the fishing bar when offsetting towards the center of the track. 0 keeps target centered. (Fish are more likely to move towards the center)",
             min: 0.0f,
             max: 1f,
-            interval: 0.01f
+            interval: 0.01f,
+            formatValue: FormatPercentage
         );
         configMenu.AddNumberOption(
             mod: mod,
@@ -164,7 +166,8 @@ public sealed class ModConfig
             tooltip: () => "Target fish and treasure if they fit within the given portion of the fishing bar. Use 0.0 to avoid dual targeting.",
             min: 0.0f,
             max: 1f,
-            interval: 0.01f
+            interval: 0.01f,
+            formatValue: FormatPercentage
         );
         configMenu.AddNumberOption(
             mod: mod,
@@ -174,7 +177,8 @@ public sealed class ModConfig
             tooltip: () => "Prioritize treasure if the capture progress exceeds this threshold. Use 1.0 to ignore treasure.",
             min: 0.0f,
             max: 1.0f,
-            interval: 0.01f
+            interval: 0.01f,
+            formatValue: FormatPercentage
         );
         configMenu.AddNumberOption(
             mod: mod,
@@ -184,7 +188,8 @@ public sealed class ModConfig
             tooltip: () => "Prioritize fish if the capture progress falls below this threshold. This value needs to be smaller than FA_PrioTreasureAbove.",
             min: 0.0f,
             max: 1.0f,
-            interval: 0.01f
+            interval: 0.01f,
+            formatValue: FormatPercentage
         );
         configMenu.AddNumberOption(
             mod: mod,
