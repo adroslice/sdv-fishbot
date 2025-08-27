@@ -22,6 +22,7 @@ public sealed class ModConfig
     public float MaxCastPercentage { get; set; } = 1f;
     public float MaxSGPE { get; set; } = 1.93f; // 125/65e for Iridium Chub and Fisher profession
     public int PauseAfterTime { get; set; } = 0130;
+    public bool AlwaysEnabled { get; set; } = false;
 
     // Utility
     public bool EnableBubbleRadar { get; set; } = false;
@@ -117,6 +118,13 @@ public sealed class ModConfig
             max: 24 * 60,
             interval: 10,
             formatValue: value => $"{value / 60:D2}:{value % 60:D2}"
+        );
+        configMenu.AddBoolOption(
+            mod: mod,
+            name: () => "Always Enabled",
+            getValue: () => ModEntry.Config.AlwaysEnabled,
+            setValue: value => { ModEntry.Config.AlwaysEnabled = value; },
+            tooltip: () => "Always run selected automations, without showing the HUD message. Automatic Casting must be toggled seperately to avoid getting stuck in a fishing loop."
         );
 
         configMenu.AddSectionTitle(mod: mod, text: () => "Utility", tooltip: () => "Little features to improve your fishing experience.");

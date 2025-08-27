@@ -119,7 +119,7 @@ internal sealed class ModEntry : Mod
     // Runs the Automations
     public void OnUpdate(object? sender, UpdateTickedEventArgs e)
     {
-        if (!Context.IsWorldReady || !AutomationEnabled || Game1.player.CurrentTool is not FishingRod rod)
+        if (!Context.IsWorldReady || !(AutomationEnabled || Config.AlwaysEnabled) || Game1.player.CurrentTool is not FishingRod rod)
             return;
 
         Action automation = GetFishingState(rod) switch
@@ -127,7 +127,7 @@ internal sealed class ModEntry : Mod
             FishingState.LowStamina => HandleLowStamina,
             FishingState.ReadyToCast when restorableDirection != null => RestoreDirection,
             FishingState.ReadyToCast when PassedPauseTime => PauseAfterTime,
-            FishingState.ReadyToCast when Config.DoAutoCast => () => ClickIf(true),
+            FishingState.ReadyToCast when Config.DoAutoCast && AutomationEnabled => () => ClickIf(true),
             FishingState.TimingCast when Config.DoAutoCast => () => ClickIf(!(rod.castingPower >= (Config.MaxCastPercentage - 0.01f))),
             FishingState.Nibbling when Config.DoAutoHit => () => rod.endUsing(Game1.currentLocation, Game1.player),
             FishingState.Playing when Config.DoAutoPlay => () => ClickIf(MinigameStrategyFishingAutomatonPlus((BobberBar)Game1.activeClickableMenu)),
@@ -165,7 +165,7 @@ internal sealed class ModEntry : Mod
         AutomationEnabled = false;
         Game1.activeClickableMenu = new GameMenu();
         pausedTimeToday = true;
-        Game1.addHUDMessage(new("Configured time has passed, Fishbot disabled!") { messageSubject = Game1.player.CurrentItem });
+        Game1.addHUDMessage(new("Configured time has passed!") { messageSubject = Game1.player.CurrentItem });
     }
 
     // On low energy, auto-disable fishbot or auto eat as configured
@@ -186,7 +186,7 @@ internal sealed class ModEntry : Mod
 
         AutomationEnabled = false;
         Game1.activeClickableMenu = new GameMenu();
-        Game1.addHUDMessage(new("Low energy, Fishbot disabled!") { messageSubject = Game1.player.CurrentItem });
+        Game1.addHUDMessage(new("Low energy!") { messageSubject = Game1.player.CurrentItem });
     }
 
     // Grabs all treasure from a GrabMenu and exits only if it could get out everything.
