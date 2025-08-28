@@ -142,7 +142,7 @@ internal sealed class ModEntry : Mod
     private FishingState GetFishingState(FishingRod rod) => true switch
     {
         _ when Game1.activeClickableMenu is BobberBar bar => bar.distanceFromCatching > 0f ? FishingState.Playing : FishingState.FishEscaped,
-        _ when Game1.activeClickableMenu is ItemGrabMenu => FishingState.ShowingTreasure,
+        _ when Game1.activeClickableMenu is ItemGrabMenu g && g.source == ItemGrabMenu.source_fishingChest => FishingState.ShowingTreasure,
         _ when rod.fishCaught => FishingState.FishCaught,
         _ when rod.isNibbling && !rod.isReeling && !rod.showingTreasure && !rod.treasureCaught => FishingState.Nibbling,
         _ when rod.isFishing && !rod.isNibbling && !rod.hit => FishingState.Waiting,

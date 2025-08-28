@@ -31,3 +31,6 @@
 
 ### Patch 0.2.2
 - Added an "Always Enabled" option for everything except auto casting
+
+### Patch 0.2.3
+- Fixed "Always Enabled" with "Auto-Loot Treasure" trying to always grab items from regular chests
