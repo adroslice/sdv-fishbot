@@ -52,17 +52,28 @@ internal sealed class ModEntry : Mod
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
     {
+        var iconicFramework = this.Helper.ModRegistry.GetApi<IIconicFrameworkApi>("furyx639.ToolbarIcons");
+        if (iconicFramework is not null)
+        {
+            iconicFramework.AddToolbarIcon(
+                this.Helper.ModContent.GetInternalAssetName("assets/if_icon.png").BaseName,
+                new Rectangle(0, 0, 16, 16),
+                () => "Toggle Fishbot",
+                () => "Toggles Automations enabled in Fishbot",
+                () => { AutomationEnabled = !AutomationEnabled; }
+            );
+        }
+
         var configMenu = this.Helper.ModRegistry.GetApi<IGenericModConfigMenuApi>("spacechase0.GenericModConfigMenu");
-        if (configMenu is null)
-            return;
-
-        configMenu.Register(
-            mod: this.ModManifest,
-            reset: () => Config = new(),
-            save: () => this.Helper.WriteConfig(Config)
-        );
-
-        ModConfig.SetupConfigOptions(configMenu, this.ModManifest);
+        if (configMenu is not null)
+        {
+            configMenu.Register(
+                mod: this.ModManifest,
+                reset: () => Config = new(),
+                save: () => this.Helper.WriteConfig(Config)
+            );
+            ModConfig.SetupConfigOptions(configMenu, this.ModManifest);
+        }
     }
 
     // Toggles the Automations

@@ -34,3 +34,6 @@
 
 ### Patch 0.2.3
 - Fixed "Always Enabled" with "Auto-Loot Treasure" trying to always grab items from regular chests
+
+### Patch 0.2.4
+- Added Support for Iconic Framework
