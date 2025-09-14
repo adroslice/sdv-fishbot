@@ -43,9 +43,6 @@ On a max-luck day, with fishing level 10 and nothing more than a fiberglass rod 
 
 I am still investigating why having the game in fullscreen seems to negatively affect the performance of this strategy. At the moment, I can only assume it's an issue of reduced update rates.
 
-## About Control
-I set myself a goal of not using Harmony patches for this mod. While I've succeeded so far, I should note that the way I'm **directly** emulating key presses through SMAPIs internal method has the downside of not working in the background.
-
 ## Future Plans
 These features are on my radar, but won't be implemented unless they're requested or I find a personal need for them.
 - Add other selectable minigame strategies should I discover a better algorithm
