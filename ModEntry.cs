@@ -6,6 +6,7 @@ using StardewValley.Tools;
 using StardewValley.Menus;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
+using Microsoft.Xna.Framework.Input;
 using HarmonyLib;
 using System.Linq;
 
@@ -13,8 +14,6 @@ internal sealed class ModEntry : Mod
 {
     public static ModConfig Config = new();
     private static bool AutomationEnabled = false;
-    private void ClickIf(bool cond) => OverrideButton(SButton.C, cond);
-    private Action<SButton, bool> OverrideButton = (_, _) => { };
     private int? restorableDirection = null;
     private bool pausedTimeToday = false;
     private bool PassedPauseTime => !pausedTimeToday && Game1.timeOfDay % 2400 >= Config.PauseAfterTime && Game1.timeOfDay % 2400 < Config.PauseAfterTime + 100;
@@ -23,15 +22,28 @@ internal sealed class ModEntry : Mod
     {
         Config = this.Helper.ReadConfig<ModConfig>() ?? new();
 
-        OverrideButton = (Action<SButton, bool>)Delegate.CreateDelegate(typeof(Action<SButton, bool>), Game1.input, Game1.input.GetType().GetMethod("OverrideButton")
-           ?? throw new InvalidOperationException("Can't find 'OverrideButton' method on SMAPI's input class. This means the mod needs to be updated to use a new input simulation method."));
-
         var harmony = new Harmony(ModManifest.UniqueID);
         harmony.Patch(
-            original: AccessTools.PropertyGetter(
-                "Microsoft.Xna.Framework.GamePlatform:IsActive"
-            ),
-            postfix: new HarmonyMethod(this.GetType(), nameof(this.Post_XNA_GamePlatform_IsActive))
+            original: AccessTools.PropertyGetter("Microsoft.Xna.Framework.GamePlatform:IsActive"),
+            prefix: new HarmonyMethod(this.GetType(), nameof(this.Pre_XNA_GamePlatform_IsActive))
+        );
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Game1), "isOneOfTheseKeysDown", new Type[] { typeof(KeyboardState), typeof(InputButton[]) }),
+            prefix: new HarmonyMethod(typeof(ModEntry), nameof(Pre_Game1_IsOneOfTheseKeysDown))
+        );
+        harmony.Patch(
+            original: AccessTools.Method(typeof(BobberBar), "update"),
+            prefix: new HarmonyMethod(typeof(ModEntry), nameof(Pre_BobberBar_Update)),
+            postfix: new HarmonyMethod(typeof(ModEntry), nameof(Post_BobberBar_Update))
+        );
+        harmony.Patch(
+            original: AccessTools.Method(typeof(Game1), "areAllOfTheseKeysUp", new Type[] { typeof(KeyboardState), typeof(InputButton[]) }),
+            prefix: new HarmonyMethod(typeof(ModEntry), nameof(Pre_Game1_AreAllOfTheseKeysUp))
+        );
+        harmony.Patch(
+            original: AccessTools.Method(typeof(FishingRod), "tickUpdate"),
+            prefix: new HarmonyMethod(typeof(ModEntry), nameof(Pre_FishingRod_TickUpdate)),
+            postfix: new HarmonyMethod(typeof(ModEntry), nameof(Post_FishingRod_TickUpdate))
         );
 
         helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
@@ -45,9 +57,43 @@ internal sealed class ModEntry : Mod
         helper.Events.Display.RenderingHud += OnRenderingHud;
     }
 
-    public static void Post_XNA_GamePlatform_IsActive(ref bool __result)
+    public static bool Pre_XNA_GamePlatform_IsActive(ref bool __result)
     {
         if (AutomationEnabled) __result = true;
+        else return true;
+        return false;
+    }
+
+    // Patches for playing the minigame
+    private static bool _isInBobberBarUpdate = false;
+    private static bool _shouldPressFishingButton = false;
+    public static void Pre_BobberBar_Update(BobberBar __instance) => _isInBobberBarUpdate = true;
+    public static void Post_BobberBar_Update() => _isInBobberBarUpdate = false;
+    public static bool Pre_Game1_IsOneOfTheseKeysDown(KeyboardState state, InputButton[] keys, ref bool __result)
+    {
+        if ((AutomationEnabled || Config.AlwaysEnabled) && Config.DoAutoPlay && _isInBobberBarUpdate && keys != null && keys.Contains(Game1.options.useToolButton[0]))
+        {
+            __result = _shouldPressFishingButton;
+            return false;
+        }
+        return true;
+    }
+
+    // Patching for timing the fishing rod cast
+    private static bool _isInFishingRodUpdate = false;
+    private static bool _shouldReleaseTimingCast = false;
+    public static void Pre_FishingRod_TickUpdate(FishingRod __instance) => _isInFishingRodUpdate = true;
+    public static void Post_FishingRod_TickUpdate() => _isInFishingRodUpdate = false;
+    public static bool Pre_Game1_AreAllOfTheseKeysUp(KeyboardState state, InputButton[] keys, ref bool __result)
+    {
+        // Handle FishingRod timing cast case
+        if ((AutomationEnabled || Config.AlwaysEnabled) && Config.DoAutoCast && _isInFishingRodUpdate && keys != null && keys.Contains(Game1.options.useToolButton[0]))
+        {
+            __result = _shouldReleaseTimingCast;
+            if (_shouldReleaseTimingCast) _shouldReleaseTimingCast = false;
+            return false;
+        }
+        return true;
     }
 
     private void OnGameLaunched(object? sender, GameLaunchedEventArgs e)
@@ -138,12 +184,12 @@ internal sealed class ModEntry : Mod
             FishingState.LowStamina => HandleLowStamina,
             FishingState.ReadyToCast when restorableDirection != null => RestoreDirection,
             FishingState.ReadyToCast when PassedPauseTime => PauseAfterTime,
-            FishingState.ReadyToCast when Config.DoAutoCast && AutomationEnabled => () => ClickIf(true),
-            FishingState.TimingCast when Config.DoAutoCast => () => ClickIf(!(rod.castingPower >= (Config.MaxCastPercentage - 0.01f))),
+            FishingState.ReadyToCast when Config.DoAutoCast && AutomationEnabled => StartCasting,
+            FishingState.TimingCast when Config.DoAutoCast => () => _shouldReleaseTimingCast = (rod.castingPower >= (Config.MaxCastPercentage - 0.01f)),
             FishingState.Nibbling when Config.DoAutoHit => () => rod.endUsing(Game1.currentLocation, Game1.player),
-            FishingState.Playing when Config.DoAutoPlay => () => ClickIf(MinigameStrategyFishingAutomatonPlus((BobberBar)Game1.activeClickableMenu)),
+            FishingState.Playing when Config.DoAutoPlay => () => _shouldPressFishingButton = MinigameStrategyFishingAutomatonPlus((BobberBar)Game1.activeClickableMenu),
             FishingState.ShowingTreasure when Config.DoAutoLoot => () => AcquireTreasure((ItemGrabMenu)Game1.activeClickableMenu),
-            FishingState.FishCaught when Config.DoAutoStow => () => ClickIf(true),
+            FishingState.FishCaught when Config.DoAutoStow => () => rod.doneHoldingFish(Game1.player),
             _ => () => { }
         };
         automation();
@@ -162,6 +208,12 @@ internal sealed class ModEntry : Mod
         _ when Context.CanPlayerMove && Game1.activeClickableMenu == null => Game1.player.Stamina < 10f ? FishingState.LowStamina : FishingState.ReadyToCast,
         _ => FishingState.Idle
     };
+
+    private void StartCasting()
+    {
+        Game1.player.lastClick = Game1.player.GetToolLocation();
+        Game1.player.BeginUsingTool();
+    }
 
     // Keep faced direction after eating and override other mods orientation restore broken by eating without menu
     private void RestoreDirection()

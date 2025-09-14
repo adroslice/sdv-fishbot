@@ -37,3 +37,11 @@
 
 ### Patch 0.2.4
 - Added Support for Iconic Framework
+
+## Minor Release 0.3.0
+- Overhauled Input Simulation (removing key simulation in favor of harmony patches) to fix:
+  - Needing to ensure mouse is positioned away from the toolbar as it would otherwise get the input
+  - Immediately disabling itself when clicking the Iconic Framework Icon
+  - Most if not all "stuck input" issues
+  - Not respecting keybinds (becoming useless when rebinding use tool)
+- Minor performance improvement
