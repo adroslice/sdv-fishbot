@@ -17,6 +17,7 @@ internal sealed class ModEntry : Mod
     private int? restorableDirection = null;
     private bool pausedTimeToday = false;
     private bool PassedPauseTime => !pausedTimeToday && Game1.timeOfDay % 2400 >= Config.PauseAfterTime && Game1.timeOfDay % 2400 < Config.PauseAfterTime + 100;
+    private string fishbotActiveText = "ui.hud.fishbot-active";
 
     public override void Entry(IModHelper helper)
     {
@@ -49,6 +50,7 @@ internal sealed class ModEntry : Mod
         helper.Events.GameLoop.GameLaunched += this.OnGameLaunched;
         helper.Events.GameLoop.DayStarted += (_, _) =>
         {
+            fishbotActiveText = this.Helper.Translation.Get("ui.hud.fishbot-active");
             pausedTimeToday = false;
             AutomationEnabled = false;
         };
@@ -104,8 +106,8 @@ internal sealed class ModEntry : Mod
             iconicFramework.AddToolbarIcon(
                 this.Helper.ModContent.GetInternalAssetName("assets/if_icon.png").BaseName,
                 new Rectangle(0, 0, 16, 16),
-                () => "Toggle Fishbot",
-                () => "Toggles Automations enabled in Fishbot",
+                () => this.Helper.Translation.Get("toolbar-icons.toggle-automations.name"),
+                () => this.Helper.Translation.Get("toolbar-icons.toggle-automations.tooltip"),
                 () => { AutomationEnabled = !AutomationEnabled; }
             );
         }
@@ -118,7 +120,7 @@ internal sealed class ModEntry : Mod
                 reset: () => Config = new(),
                 save: () => this.Helper.WriteConfig(Config)
             );
-            ModConfig.SetupConfigOptions(configMenu, this.ModManifest);
+            ModConfig.SetupConfigOptions(configMenu, this.ModManifest, this.Helper.Translation);
         }
     }
 
@@ -159,7 +161,7 @@ internal sealed class ModEntry : Mod
         if (!AutomationEnabled) return;
 
         int vpadding = 10, hpadding = 12;
-        var text = "Fishbot active!";
+        var text = fishbotActiveText;
         var textSize = Game1.smallFont.MeasureString(text);
         var position = new Vector2(0, Game1.graphics.GraphicsDevice.Viewport.Height - textSize.Y - vpadding * 2);
         IClickableMenu.drawTextureBox(e.SpriteBatch,
@@ -185,7 +187,7 @@ internal sealed class ModEntry : Mod
             FishingState.ReadyToCast when restorableDirection != null => RestoreDirection,
             FishingState.ReadyToCast when PassedPauseTime => PauseAfterTime,
             FishingState.ReadyToCast when Config.DoAutoCast && AutomationEnabled => StartCasting,
-            FishingState.TimingCast when Config.DoAutoCast => () => _shouldReleaseTimingCast = (rod.castingPower >= (Config.MaxCastPercentage - 0.01f)),
+            FishingState.TimingCast when Config.DoAutoCast => () => _shouldReleaseTimingCast = (rod.castingPower >= (Config.CastDistance - 0.01f)),
             FishingState.Nibbling when Config.DoAutoHit => () => rod.endUsing(Game1.currentLocation, Game1.player),
             FishingState.Playing when Config.DoAutoPlay => () => _shouldPressFishingButton = MinigameStrategyFishingAutomatonPlus((BobberBar)Game1.activeClickableMenu),
             FishingState.ShowingTreasure when Config.DoAutoLoot => () => AcquireTreasure((ItemGrabMenu)Game1.activeClickableMenu),
@@ -228,7 +230,7 @@ internal sealed class ModEntry : Mod
         AutomationEnabled = false;
         Game1.activeClickableMenu = new GameMenu();
         pausedTimeToday = true;
-        Game1.addHUDMessage(new("Configured time has passed!") { messageSubject = Game1.player.CurrentItem });
+        Game1.addHUDMessage(new(this.Helper.Translation.Get("ui.hud.message.time-passed")) { messageSubject = Game1.player.CurrentItem });
     }
 
     // On low energy, auto-disable fishbot or auto eat as configured
@@ -249,7 +251,7 @@ internal sealed class ModEntry : Mod
 
         AutomationEnabled = false;
         Game1.activeClickableMenu = new GameMenu();
-        Game1.addHUDMessage(new("Low energy!") { messageSubject = Game1.player.CurrentItem });
+        Game1.addHUDMessage(new(this.Helper.Translation.Get("ui.hud.message.low-energy")) { messageSubject = Game1.player.CurrentItem });
     }
 
     // Grabs all treasure from a GrabMenu and exits only if it could get out everything.
@@ -275,8 +277,8 @@ internal sealed class ModEntry : Mod
         float barCenter = bar.bobberBarPos + (bar.bobberBarHeight / 2) - 30f; // 30f here is a correction offset stemming from the bobbers height
         float barMax = BobberBar.bobberBarTrackHeight - bar.bobberBarHeight;
         float treasureBobberDistance = Math.Abs(bar.treasurePosition - bar.bobberPosition);
-        float dualTargetAllowance = bar.bobberBarHeight * Config.FA_DualTargetingBarPercentage;
-        float centerBiasAllowance = bar.bobberBarHeight * Config.FA_RelativeOffsetBarPercentage;
+        float dualTargetAllowance = bar.bobberBarHeight * Config.FA_DualTargetBarPercentage;
+        float centerBiasAllowance = bar.bobberBarHeight * Config.FA_CenterBiasBarPercentage;
 
         // Target prioritization
         if (bar.treasure && bar.treasurePosition > 0 && !bar.treasureCaught)
@@ -290,13 +292,13 @@ internal sealed class ModEntry : Mod
             !bar.treasureCaught && bar.treasurePosition != 0 && (treasureBobberDistance < dualTargetAllowance) ? (bar.treasurePosition + bar.bobberPosition) / 2 : // Both if within allowance
             FA_PrioTreasure ? bar.treasurePosition : // Treasure if prioritized
             Math.Clamp( // Fish, try to predict its future position without overshooting its own target...
-                bar.bobberPosition + bar.bobberSpeed * Config.FA_PredictLinearFrames,
+                bar.bobberPosition + bar.bobberSpeed * Config.FA_PredictFrames,
                 Math.Min(bar.bobberTargetPosition, bar.bobberPosition),
                 Math.Max(bar.bobberTargetPosition, bar.bobberPosition) // ... and bias towards the center based on allowance and current position on the track
             ) + centerBiasAllowance / 2 - ((bar.bobberPosition / BobberBar.bobberTrackHeight) * centerBiasAllowance);
 
         // Enforce general speed limit
-        if (Math.Abs(bar.bobberBarSpeed) > Config.FA_MaxBarVelocity)
+        if (Math.Abs(bar.bobberBarSpeed) > Config.FA_MaxBarSpeed)
             return bar.bobberBarSpeed > 0;
 
         // Enforce a target velocity when the fish is inside the bar
@@ -304,8 +306,8 @@ internal sealed class ModEntry : Mod
         {
             float targetVelocity = FA_BobberBarTargetVelocity(
                 Math.Abs(barCenter - targetPos),
-                Math.Max(Config.FA_MinBarTargetVelocity, Math.Abs(bar.bobberSpeed)),
-                Config.FA_MaxBarVelocity,
+                Math.Max(Config.FA_MinBarTrackingSpeed, Math.Abs(bar.bobberSpeed)),
+                Config.FA_MaxBarSpeed,
                 0.01F,
                 (bar.bobberBarHeight / 2)
             );
@@ -315,7 +317,7 @@ internal sealed class ModEntry : Mod
         }
 
         // Enforce speed limit near bottom
-        if ((bar.bobberBarPos > barMax - Config.FA_BottomThreshold) && bar.bobberBarSpeed > Config.FA_MaxBarVelocityNearBottom)
+        if ((bar.bobberBarPos > barMax - Config.FA_BottomThreshold) && bar.bobberBarSpeed > Config.FA_MaxBarSpeedNearBottom)
             return true;
 
         // Otherwise, accelerate towards target
