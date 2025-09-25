@@ -45,3 +45,7 @@
   - Most if not all "stuck input" issues
   - Not respecting keybinds (becoming useless when rebinding use tool)
 - Minor performance improvement
+
+### 0.3.1
+- Added i18n support and an official german translation
+- Added an option to eat the first food item in your inventory instead of the one with the highest sGPE

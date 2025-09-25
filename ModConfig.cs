@@ -1,6 +1,5 @@
 namespace Fishbot;
 
-using System.Text.RegularExpressions;
 using StardewModdingAPI;
 
 public sealed class ModConfig
@@ -21,6 +20,7 @@ public sealed class ModConfig
     // Automation Options
     public float CastDistance { get; set; } = 1f;
     public float MaxSGPE { get; set; } = 1.93f; // 125/65e for Iridium Chub and Fisher profession
+    public bool AutoEatFirstFood { get; set; } = false;
     public int PauseAfterTime { get; set; } = 0130;
     public bool AlwaysEnabled { get; set; } = false;
 
@@ -107,6 +107,13 @@ public sealed class ModConfig
             max: 5f,
             interval: 0.01f,
             tooltip: () => t.Get("config.automations.auto-eat-max-sgpe.tooltip")
+        );
+        configMenu.AddBoolOption(
+            mod: mod,
+            name: () => t.Get("config.automations.auto-eat-first-food.name"),
+            getValue: () => ModEntry.Config.AutoEatFirstFood,
+            setValue: value => { ModEntry.Config.AutoEatFirstFood = value; },
+            tooltip: () => t.Get("config.automations.auto-eat-first-food.tooltip")
         );
         configMenu.AddNumberOption(
             mod: mod,

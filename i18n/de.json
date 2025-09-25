@@ -19,6 +19,8 @@
   "config.automations.cast-distance.name": "Auswerf-Distanz",
   "config.automations.auto-eat-max-sgpe.name": "Auto-Essen max. sGPE",
   "config.automations.auto-eat-max-sgpe.tooltip": "Falls alles verfügbare Essen dieses Verkaufspreis-zu-Energie-Verhältnis überschritt wird statt Auto-Essen pausiert. (Beispiel: 1.93 für Iridium-Kaulbarsch mit Fischer-Beruf)",
+  "config.automations.auto-eat-first-food.name": "Erstes essen",
+  "config.automations.auto-eat-first-food.tooltip": "Statt das Item mit dem niedrigsten sGPE-Wert zu essen, esse das erste Item im Inventar.",
   "config.automations.pause-after-time.name": "Pausieren nach",
   "config.automations.pause-after-time.tooltip": "Einmal pro Tag, pausiere Automatisch nach dieser Zeit (24h-Format). Deaktiviere mit 02:00.",
   "config.automations.always-enabled.name": "Immer aktiv",

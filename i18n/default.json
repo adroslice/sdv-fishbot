@@ -19,6 +19,8 @@
   "config.automations.cast-distance.name": "Cast Distance",
   "config.automations.auto-eat-max-sgpe.name": "Auto-Eat Max sGPE",
   "config.automations.auto-eat-max-sgpe.tooltip": "Will pause instead of eating if all available food exceeds this Sell Price to Energy threshold. (e.g. 1.93 for an iridium chub with the Fisher profession)",
+  "config.automations.auto-eat-first-food.name": "Eat First Food",
+  "config.automations.auto-eat-first-food.tooltip": "Eat the first food item in your inventory instead of the one with the lowest sGPE.",
   "config.automations.pause-after-time.name": "Pause after",
   "config.automations.pause-after-time.tooltip": "Once per day, pause after this time (24h format). Use 02:00 to disable.",
   "config.automations.always-enabled.name": "Always Enabled",

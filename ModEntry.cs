@@ -236,17 +236,21 @@ internal sealed class ModEntry : Mod
     // On low energy, auto-disable fishbot or auto eat as configured
     private void HandleLowStamina()
     {
-        if (Config.DoAutoEat
-            && Game1.player.Items.OfType<Object>().Where(i => i.staminaRecoveredOnConsumption() > 0)
-                .MinBy(i => (float)i.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)i.staminaRecoveredOnConsumption())
-                is Item bestItem
-            && ((float)bestItem.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)bestItem.staminaRecoveredOnConsumption()) <= Config.MaxSGPE
-        )
+        if (Config.DoAutoEat)
         {
-            restorableDirection = Game1.player.FacingDirection;
-            Game1.player.Items.Reduce(bestItem, 1);
-            Game1.player.eatObject(bestItem as Object);
-            return;
+            var edibles = Game1.player.Items.OfType<Object>().Where(i => i.staminaRecoveredOnConsumption() > 0);
+            Object? toEat = Config.AutoEatFirstFood
+                ? edibles.FirstOrDefault()
+                : edibles.Where(bestItem => ((float)bestItem.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)bestItem.staminaRecoveredOnConsumption()) <= Config.MaxSGPE)
+                    .MinBy(i => (float)i.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)i.staminaRecoveredOnConsumption());
+
+            if (toEat is Item item)
+            {
+                restorableDirection = Game1.player.FacingDirection;
+                Game1.player.Items.Reduce(item, 1);
+                Game1.player.eatObject(item as Object);
+                return;
+            }
         }
 
         AutomationEnabled = false;
