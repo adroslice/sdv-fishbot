@@ -54,7 +54,7 @@ internal sealed class ModEntry : Mod
             pausedTimeToday = false;
             AutomationEnabled = false;
         };
-        helper.Events.Input.ButtonPressed += this.OnButtonPressed;
+        helper.Events.Input.ButtonsChanged += this.OnButtonsChanged;
         helper.Events.GameLoop.UpdateTicked += this.OnUpdate;
         helper.Events.Display.RenderingHud += OnRenderingHud;
     }
@@ -124,10 +124,9 @@ internal sealed class ModEntry : Mod
         }
     }
 
-    // Toggles the Automations
-    private void OnButtonPressed(object? sender, ButtonPressedEventArgs e)
+    private void OnButtonsChanged(object? sender, ButtonsChangedEventArgs e)
     {
-        if (e.Button == Config.ToggleAutomationKey) AutomationEnabled = !AutomationEnabled;
+        if (Config.ToggleAutomationKey.JustPressed()) AutomationEnabled = !AutomationEnabled;
     }
 
     // Renders the Activity Indicator and Bubble Radar

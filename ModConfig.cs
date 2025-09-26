@@ -1,11 +1,12 @@
 namespace Fishbot;
 
 using StardewModdingAPI;
+using StardewModdingAPI.Utilities;
 
 public sealed class ModConfig
 {
     // Keybinds
-    public SButton ToggleAutomationKey { get; set; } = SButton.F5;
+    public KeybindList ToggleAutomationKey { get; set; } = KeybindList.Parse("F5");
 
     // Core Automations
     public bool DoAutoCast { get; set; } = true;
@@ -42,7 +43,7 @@ public sealed class ModConfig
     public static void SetupConfigOptions(IGenericModConfigMenuApi configMenu, IManifest mod, ITranslationHelper t)
     {
         configMenu.AddSectionTitle(mod: mod, text: () => t.Get("config.keybinds.name"));
-        configMenu.AddKeybind(
+        configMenu.AddKeybindList(
             mod: mod,
             name: () => t.Get("config.keybinds.toggle-automations.name"),
             tooltip: () => t.Get("config.keybinds.toggle-automations.tooltip"),
