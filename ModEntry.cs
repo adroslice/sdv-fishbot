@@ -239,10 +239,10 @@ internal sealed class ModEntry : Mod
         if (Config.DoAutoEat)
         {
             var edibles = Game1.player.Items.OfType<Object>().Where(i => i.staminaRecoveredOnConsumption() > 0);
+            var underThreshold = edibles.Where(bestItem => ((float)bestItem.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)bestItem.staminaRecoveredOnConsumption()) <= Config.MaxSGPE);
             Object? toEat = Config.AutoEatFirstFood
-                ? edibles.FirstOrDefault()
-                : edibles.Where(bestItem => ((float)bestItem.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)bestItem.staminaRecoveredOnConsumption()) <= Config.MaxSGPE)
-                    .MinBy(i => (float)i.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)i.staminaRecoveredOnConsumption());
+                ? underThreshold.FirstOrDefault()
+                : underThreshold.MinBy(i => (float)i.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)i.staminaRecoveredOnConsumption());
 
             if (toEat is Item item)
             {
