@@ -252,6 +252,8 @@ internal sealed class ModEntry : Mod
             }
         }
 
+        if (!AutomationEnabled) return;
+
         AutomationEnabled = false;
         Game1.activeClickableMenu = new GameMenu();
         Game1.addHUDMessage(new(this.Helper.Translation.Get("ui.hud.message.low-energy")) { messageSubject = Game1.player.CurrentItem });

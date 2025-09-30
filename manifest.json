@@ -1,7 +1,7 @@
 {
   "Name": "Fishbot",
   "Author": "AdroSlice",
-  "Version": "0.3.1",
+  "Version": "0.3.2",
   "Description": "Automates fishing in a way that emulates real players.",
   "UniqueID": "AdroSlice.Fishbot",
   "EntryDll": "Fishbot.dll",

@@ -46,6 +46,9 @@
   - Not respecting keybinds (becoming useless when rebinding use tool)
 - Minor performance improvement
 
-### 0.3.1
+### Patch 0.3.1
 - Added i18n support and an official german translation
 - Added an option to eat the first food item in your inventory instead of the one with the highest sGPE
+
+### Patch 0.3.2
+- Fixed getting stuck in the menu on low energy when auto-eat was off and always enabled was on by making the auto-pausing conditional on full enablement
