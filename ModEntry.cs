@@ -73,7 +73,7 @@ internal sealed class ModEntry : Mod
     public static void Post_BobberBar_Update() => _isInBobberBarUpdate = false;
     public static bool Pre_Game1_IsOneOfTheseKeysDown(KeyboardState state, InputButton[] keys, ref bool __result)
     {
-        if ((AutomationEnabled || Config.AlwaysEnabled) && Config.DoAutoPlay && _isInBobberBarUpdate && keys != null && keys.Contains(Game1.options.useToolButton[0]))
+        if ((AutomationEnabled || Config.AutomationMode != "toggle") && Config.DoAutoPlay && _isInBobberBarUpdate && keys != null && keys.Contains(Game1.options.useToolButton[0]))
         {
             __result = _shouldPressFishingButton;
             return false;
@@ -89,7 +89,7 @@ internal sealed class ModEntry : Mod
     public static bool Pre_Game1_AreAllOfTheseKeysUp(KeyboardState state, InputButton[] keys, ref bool __result)
     {
         // Handle FishingRod timing cast case
-        if ((AutomationEnabled || Config.AlwaysEnabled) && Config.DoAutoCast && _isInFishingRodUpdate && keys != null && keys.Contains(Game1.options.useToolButton[0]))
+        if ((AutomationEnabled || Config.AutomationMode != "toggle") && Config.DoAutoCast && _isInFishingRodUpdate && keys != null && keys.Contains(Game1.options.useToolButton[0]))
         {
             __result = _shouldReleaseTimingCast;
             if (_shouldReleaseTimingCast) _shouldReleaseTimingCast = false;
@@ -157,7 +157,7 @@ internal sealed class ModEntry : Mod
             );
         }
 
-        if (!AutomationEnabled) return;
+        if (!AutomationEnabled || Config.AutomationMode == "stealth") return;
 
         int vpadding = 10, hpadding = 12;
         var text = fishbotActiveText;
@@ -177,7 +177,7 @@ internal sealed class ModEntry : Mod
     // Runs the Automations
     public void OnUpdate(object? sender, UpdateTickedEventArgs e)
     {
-        if (!Context.IsWorldReady || !(AutomationEnabled || Config.AlwaysEnabled) || Game1.player.CurrentTool is not FishingRod rod)
+        if (!Context.IsWorldReady || !(AutomationEnabled || Config.AutomationMode != "toggle") || Game1.player.CurrentTool is not FishingRod rod)
             return;
 
         Action automation = GetFishingState(rod) switch
@@ -187,10 +187,10 @@ internal sealed class ModEntry : Mod
             FishingState.ReadyToCast when PassedPauseTime => PauseAfterTime,
             FishingState.ReadyToCast when Config.DoAutoCast && AutomationEnabled => StartCasting,
             FishingState.TimingCast when Config.DoAutoCast => () => _shouldReleaseTimingCast = (rod.castingPower >= (Config.CastDistance - 0.01f)),
-            FishingState.Nibbling when Config.DoAutoHit => () => rod.endUsing(Game1.currentLocation, Game1.player),
+            FishingState.Nibbling when Config.DoAutoCast => () => rod.endUsing(Game1.currentLocation, Game1.player),
             FishingState.Playing when Config.DoAutoPlay => () => _shouldPressFishingButton = MinigameStrategyFishingAutomatonPlus((BobberBar)Game1.activeClickableMenu),
             FishingState.ShowingTreasure when Config.DoAutoLoot => () => AcquireTreasure((ItemGrabMenu)Game1.activeClickableMenu),
-            FishingState.FishCaught when Config.DoAutoStow => () => rod.doneHoldingFish(Game1.player),
+            FishingState.FishCaught when Config.DoAutoLoot => () => rod.doneHoldingFish(Game1.player),
             _ => () => { }
         };
         automation();
@@ -229,17 +229,17 @@ internal sealed class ModEntry : Mod
         AutomationEnabled = false;
         Game1.activeClickableMenu = new GameMenu();
         pausedTimeToday = true;
-        Game1.addHUDMessage(new(this.Helper.Translation.Get("ui.hud.message.time-passed")) { messageSubject = Game1.player.CurrentItem });
+        if (Config.AutomationMode != "stealth") Game1.addHUDMessage(new(this.Helper.Translation.Get("ui.hud.message.time-passed")) { messageSubject = Game1.player.CurrentItem });
     }
 
     // On low energy, auto-disable fishbot or auto eat as configured
     private void HandleLowStamina()
     {
-        if (Config.DoAutoEat)
+        if (Config.AutoEatMode != "disabled")
         {
             var edibles = Game1.player.Items.OfType<Object>().Where(i => i.staminaRecoveredOnConsumption() > 0);
             var underThreshold = edibles.Where(bestItem => ((float)bestItem.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)bestItem.staminaRecoveredOnConsumption()) <= Config.MaxSGPE);
-            Object? toEat = Config.AutoEatFirstFood
+            Object? toEat = Config.AutoEatMode == "first"
                 ? underThreshold.FirstOrDefault()
                 : underThreshold.MinBy(i => (float)i.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)i.staminaRecoveredOnConsumption());
 
@@ -256,7 +256,7 @@ internal sealed class ModEntry : Mod
 
         AutomationEnabled = false;
         Game1.activeClickableMenu = new GameMenu();
-        Game1.addHUDMessage(new(this.Helper.Translation.Get("ui.hud.message.low-energy")) { messageSubject = Game1.player.CurrentItem });
+        if (Config.AutomationMode != "stealth") Game1.addHUDMessage(new(this.Helper.Translation.Get("ui.hud.message.low-energy")) { messageSubject = Game1.player.CurrentItem });
     }
 
     // Grabs all treasure from a GrabMenu and exits only if it could get out everything.
@@ -267,7 +267,7 @@ internal sealed class ModEntry : Mod
         for (int i = actualInventory.Count - 1; i >= 0; i--)
             if (Game1.player.addItemToInventoryBool(actualInventory[i]))
             {
-                Game1.addHUDMessage(new(actualInventory[i].DisplayName) { messageSubject = actualInventory[i] });
+                if (Config.AutomationMode != "stealth") Game1.addHUDMessage(new(actualInventory[i].DisplayName) { messageSubject = actualInventory[i], number = actualInventory[i].Stack });
                 actualInventory.RemoveAt(i);
             }
 

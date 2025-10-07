@@ -8,22 +8,21 @@ public sealed class ModConfig
     // Keybinds
     public KeybindList ToggleAutomationKey { get; set; } = KeybindList.Parse("F5");
 
+    // Mode
+    public string AutomationMode { get; set; } = "toggle";
+
     // Core Automations
     public bool DoAutoCast { get; set; } = true;
-    public bool DoAutoHit { get; set; } = true;
     public bool DoAutoPlay { get; set; } = true;
-    public bool DoAutoStow { get; set; } = true;
     public bool DoAutoLoot { get; set; } = true;
 
     // Secondary Automations
-    public bool DoAutoEat { get; set; } = true;
+    public string AutoEatMode { get; set; } = "best";
 
     // Automation Options
     public float CastDistance { get; set; } = 1f;
     public float MaxSGPE { get; set; } = 1.93f; // 125/65e for Iridium Chub and Fisher profession
-    public bool AutoEatFirstFood { get; set; } = false;
     public int PauseAfterTime { get; set; } = 0130;
-    public bool AlwaysEnabled { get; set; } = false;
 
     // Utility
     public bool EnableBubbleRadar { get; set; } = false;
@@ -42,7 +41,6 @@ public sealed class ModConfig
     public static string FormatPercentage(float x) => $"{x * 100}%";
     public static void SetupConfigOptions(IGenericModConfigMenuApi configMenu, IManifest mod, ITranslationHelper t)
     {
-        configMenu.AddSectionTitle(mod: mod, text: () => t.Get("config.keybinds.name"));
         configMenu.AddKeybindList(
             mod: mod,
             name: () => t.Get("config.keybinds.toggle-automations.name"),
@@ -51,18 +49,25 @@ public sealed class ModConfig
             setValue: value => ModEntry.Config.ToggleAutomationKey = value
         );
 
-        configMenu.AddSectionTitle(mod: mod, text: () => t.Get("config.automations.name"), tooltip: () => t.Get("config.automations.tooltip"));
+        configMenu.AddTextOption(
+            mod: mod,
+            name: () => t.Get("config.automations.mode.name"),
+            tooltip: () => t.Get("config.automations.mode.tooltip"),
+            allowedValues: new[] {
+                "toggle",
+                "always",
+                "stealth",
+            },
+            formatAllowedValue: value => t.Get($"config.automations.mode.{value}.name"),
+            getValue: () => ModEntry.Config.AutomationMode,
+            setValue: value => ModEntry.Config.AutomationMode = value
+        );
+
         configMenu.AddBoolOption(
             mod: mod,
             name: () => t.Get("config.automations.auto-cast.name"),
             getValue: () => ModEntry.Config.DoAutoCast,
             setValue: value => { ModEntry.Config.DoAutoCast = value; }
-        );
-        configMenu.AddBoolOption(
-            mod: mod,
-            name: () => t.Get("config.automations.auto-hit.name"),
-            getValue: () => ModEntry.Config.DoAutoHit,
-            setValue: value => { ModEntry.Config.DoAutoHit = value; }
         );
         configMenu.AddBoolOption(
             mod: mod,
@@ -72,22 +77,22 @@ public sealed class ModConfig
         );
         configMenu.AddBoolOption(
             mod: mod,
-            name: () => t.Get("config.automations.auto-stow.name"),
-            getValue: () => ModEntry.Config.DoAutoStow,
-            setValue: value => { ModEntry.Config.DoAutoStow = value; }
-        );
-        configMenu.AddBoolOption(
-            mod: mod,
             name: () => t.Get("config.automations.auto-loot.name"),
             getValue: () => ModEntry.Config.DoAutoLoot,
             setValue: value => { ModEntry.Config.DoAutoLoot = value; }
         );
-        configMenu.AddBoolOption(
+        configMenu.AddTextOption(
             mod: mod,
-            name: () => t.Get("config.automations.auto-eat.name"),
-            getValue: () => ModEntry.Config.DoAutoEat,
-            setValue: value => { ModEntry.Config.DoAutoEat = value; },
-            tooltip: () => t.Get("config.automations.auto-eat.tooltip")
+            name: () => t.Get("config.automations.auto-eat-mode.name"),
+            tooltip: () => t.Get("config.automations.auto-eat-mode.tooltip"),
+            allowedValues: new[] {
+                "disabled",
+                "first",
+                "best",
+            },
+            formatAllowedValue: value => t.Get($"config.automations.auto-eat-mode.{value}.name"),
+            getValue: () => ModEntry.Config.AutoEatMode,
+            setValue: value => ModEntry.Config.AutoEatMode = value
         );
         configMenu.AddNumberOption(
             mod: mod,
@@ -109,13 +114,6 @@ public sealed class ModConfig
             interval: 0.01f,
             tooltip: () => t.Get("config.automations.auto-eat-max-sgpe.tooltip")
         );
-        configMenu.AddBoolOption(
-            mod: mod,
-            name: () => t.Get("config.automations.auto-eat-first-food.name"),
-            getValue: () => ModEntry.Config.AutoEatFirstFood,
-            setValue: value => { ModEntry.Config.AutoEatFirstFood = value; },
-            tooltip: () => t.Get("config.automations.auto-eat-first-food.tooltip")
-        );
         configMenu.AddNumberOption(
             mod: mod,
             name: () => t.Get("config.automations.pause-after-time.name"),
@@ -127,15 +125,7 @@ public sealed class ModConfig
             interval: 10,
             formatValue: value => $"{value / 60:D2}:{value % 60:D2}"
         );
-        configMenu.AddBoolOption(
-            mod: mod,
-            name: () => t.Get("config.automations.always-enabled.name"),
-            getValue: () => ModEntry.Config.AlwaysEnabled,
-            setValue: value => { ModEntry.Config.AlwaysEnabled = value; },
-            tooltip: () => t.Get("config.automations.always-enabled.tooltip")
-        );
 
-        configMenu.AddSectionTitle(mod: mod, text: () => t.Get("config.utility.name"), tooltip: () => t.Get("config.utility.tooltip"));
         configMenu.AddBoolOption(
             mod: mod,
             getValue: () => ModEntry.Config.EnableBubbleRadar,

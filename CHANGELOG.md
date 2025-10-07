@@ -51,4 +51,12 @@
 - Added an option to eat the first food item in your inventory instead of the one with the highest sGPE
 
 ### Patch 0.3.2
+- Switched from single keybind to KeybindList to allow for key combinations
+- Fixed Max sGPE not being applied when Eat First Food was enabled
 - Fixed getting stuck in the menu on low energy when auto-eat was off and always enabled was on by making the auto-pausing conditional on full enablement
+
+## Minor Release 0.4.0
+- Translation Changes
+- Replaced "Always Enabled" with Automation Mode, including a new "Stealth" mode
+- Merged Auto-Hit => Auto-Cast, Auto-Stow => Auto-Loot & Auto-Eat options
+- Removed config categories, further config changes under consideration
