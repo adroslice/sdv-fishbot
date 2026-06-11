@@ -1,0 +1,8 @@
+{
+  "language_servers": ["!omnisharp"],
+  "languages": {
+    "CSharp": {
+      "language_servers": ["!csharp-ls", "!roslyn", "omnisharp", "..."],
+    },
+  },
+}
