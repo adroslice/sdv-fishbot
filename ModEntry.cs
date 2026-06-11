@@ -18,6 +18,7 @@ internal sealed class ModEntry : Mod
     private int? restorableDirection = null;
     private bool pausedTimeToday = false;
     private bool hadBait = false;
+    private bool wasCasting = false;
     private bool PassedPauseTime => !pausedTimeToday && Game1.timeOfDay % 2400 >= Config.PauseAfterTime && Game1.timeOfDay % 2400 < Config.PauseAfterTime + 100;
     private string fishbotActiveText = "ui.hud.fishbot-active";
 
@@ -55,6 +56,7 @@ internal sealed class ModEntry : Mod
             fishbotActiveText = this.Helper.Translation.Get("ui.hud.fishbot-active");
             pausedTimeToday = false;
             hadBait = false;
+            wasCasting = false;
             AutomationEnabled = false;
         };
         helper.Events.Input.ButtonsChanged += this.OnButtonsChanged;
@@ -186,7 +188,19 @@ internal sealed class ModEntry : Mod
         if (rod.attachments?.Length > 0 && rod.attachments[0] is not null)
             hadBait = true;
 
-        Action automation = GetFishingState(rod) switch
+        var state = GetFishingState(rod);
+
+        if (state == FishingState.Waiting) wasCasting = false;
+        // Auto pause on invalid cast
+        if (AutomationEnabled && state == FishingState.ReadyToCast && wasCasting)
+        {
+            wasCasting = false;
+            AutoPause("ui.hud.message.cast-blocked");
+            return;
+        }
+        if (state == FishingState.Casting) wasCasting = true;
+
+        Action automation = state switch
         {
             FishingState.LowStamina => HandleLowStamina,
             FishingState.ReadyToCast when restorableDirection != null => RestoreDirection,
@@ -231,20 +245,23 @@ internal sealed class ModEntry : Mod
         restorableDirection = null;
     }
 
-    private void PauseAfterTime()
+    private void AutoPause(string unlocalizedMessage)
     {
         AutomationEnabled = false;
         Game1.activeClickableMenu = new GameMenu();
+        if (Config.AutomationMode != "stealth") Game1.addHUDMessage(new(this.Helper.Translation.Get(unlocalizedMessage)) { messageSubject = Game1.player.CurrentItem });
+    }
+
+    private void PauseAfterTime()
+    {
         pausedTimeToday = true;
-        if (Config.AutomationMode != "stealth") Game1.addHUDMessage(new(this.Helper.Translation.Get("ui.hud.message.time-passed")) { messageSubject = Game1.player.CurrentItem });
+        AutoPause("ui.hud.message.time-passed");
     }
 
     private void PauseNoBait()
     {
-        AutomationEnabled = false;
         hadBait = false;
-        Game1.activeClickableMenu = new GameMenu();
-        if (Config.AutomationMode != "stealth") Game1.addHUDMessage(new(this.Helper.Translation.Get("ui.hud.message.no-bait")) { messageSubject = Game1.player.CurrentItem });
+        AutoPause("ui.hud.message.no-bait");
     }
 
     // On low energy, auto-disable fishbot or auto eat as configured
@@ -269,9 +286,7 @@ internal sealed class ModEntry : Mod
 
         if (!AutomationEnabled) return;
 
-        AutomationEnabled = false;
-        Game1.activeClickableMenu = new GameMenu();
-        if (Config.AutomationMode != "stealth") Game1.addHUDMessage(new(this.Helper.Translation.Get("ui.hud.message.low-energy")) { messageSubject = Game1.player.CurrentItem });
+        AutoPause("ui.hud.message.low-energy");
     }
 
     // Grabs all treasure from a GrabMenu and exits only if it could get out everything.

@@ -5,6 +5,7 @@
   "ui.hud.message.time-passed": "Konfigurierte Zeit übertreten!",
   "ui.hud.message.low-energy": "Zu wenig Energie!",
   "ui.hud.message.no-bait": "Kein Köder mehr!",
+  "ui.hud.message.cast-blocked": "Kein Wasser voraus!",
   "config.keybinds.toggle-automations.name": "Automationen umschalten",
   "config.keybinds.toggle-automations.tooltip": "Mit diesen Tasten werden die aktivierten Automationen an- und ausgeschaltet.",
   "config.automations.mode.name": "Automations-Modus",

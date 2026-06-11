@@ -5,6 +5,7 @@
   "ui.hud.message.time-passed": "Configured time has passed!",
   "ui.hud.message.low-energy": "Low energy!",
   "ui.hud.message.no-bait": "Out of bait!",
+  "ui.hud.message.cast-blocked": "No water ahead!",
   "config.keybinds.toggle-automations.name": "Toggle Automation",
   "config.keybinds.toggle-automations.tooltip": "Pressing these keys toggles enabled fishing automations on and off.",
   "config.automations.mode.name": "Automation Mode",
