@@ -1,4 +1,5 @@
 namespace Fishbot;
+
 using StardewModdingAPI;
 using StardewModdingAPI.Events;
 using StardewValley;
@@ -16,6 +17,7 @@ internal sealed class ModEntry : Mod
     private static bool AutomationEnabled = false;
     private int? restorableDirection = null;
     private bool pausedTimeToday = false;
+    private bool hadBait = false;
     private bool PassedPauseTime => !pausedTimeToday && Game1.timeOfDay % 2400 >= Config.PauseAfterTime && Game1.timeOfDay % 2400 < Config.PauseAfterTime + 100;
     private string fishbotActiveText = "ui.hud.fishbot-active";
 
@@ -52,6 +54,7 @@ internal sealed class ModEntry : Mod
         {
             fishbotActiveText = this.Helper.Translation.Get("ui.hud.fishbot-active");
             pausedTimeToday = false;
+            hadBait = false;
             AutomationEnabled = false;
         };
         helper.Events.Input.ButtonsChanged += this.OnButtonsChanged;
@@ -180,11 +183,15 @@ internal sealed class ModEntry : Mod
         if (!Context.IsWorldReady || !(AutomationEnabled || Config.AutomationMode != "toggle") || Game1.player.CurrentTool is not FishingRod rod)
             return;
 
+        if (rod.attachments?.Length > 0 && rod.attachments[0] is not null)
+            hadBait = true;
+
         Action automation = GetFishingState(rod) switch
         {
             FishingState.LowStamina => HandleLowStamina,
             FishingState.ReadyToCast when restorableDirection != null => RestoreDirection,
             FishingState.ReadyToCast when PassedPauseTime => PauseAfterTime,
+            FishingState.ReadyToCast when Config.DoAutoPauseOnNoBait && hadBait && (rod.attachments?.Length == 0 || rod.attachments?[0] is null) => PauseNoBait,
             FishingState.ReadyToCast when Config.DoAutoCast && AutomationEnabled => StartCasting,
             FishingState.TimingCast when Config.DoAutoCast => () => _shouldReleaseTimingCast = (rod.castingPower >= (Config.CastDistance - 0.01f)),
             FishingState.Nibbling when Config.DoAutoCast => () => rod.endUsing(Game1.currentLocation, Game1.player),
@@ -230,6 +237,14 @@ internal sealed class ModEntry : Mod
         Game1.activeClickableMenu = new GameMenu();
         pausedTimeToday = true;
         if (Config.AutomationMode != "stealth") Game1.addHUDMessage(new(this.Helper.Translation.Get("ui.hud.message.time-passed")) { messageSubject = Game1.player.CurrentItem });
+    }
+
+    private void PauseNoBait()
+    {
+        AutomationEnabled = false;
+        hadBait = false;
+        Game1.activeClickableMenu = new GameMenu();
+        if (Config.AutomationMode != "stealth") Game1.addHUDMessage(new(this.Helper.Translation.Get("ui.hud.message.no-bait")) { messageSubject = Game1.player.CurrentItem });
     }
 
     // On low energy, auto-disable fishbot or auto eat as configured

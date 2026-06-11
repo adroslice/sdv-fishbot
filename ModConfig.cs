@@ -26,6 +26,7 @@ public sealed class ModConfig
 
     // Utility
     public bool EnableBubbleRadar { get; set; } = false;
+    public bool DoAutoPauseOnNoBait { get; set; } = true;
 
     // FishingAutomaton+ Strategy Parameters
     public int FA_PredictFrames { get; set; } = 5;
@@ -132,6 +133,14 @@ public sealed class ModConfig
             setValue: value => ModEntry.Config.EnableBubbleRadar = value,
             name: () => t.Get("config.utility.bubble-radar.name"),
             tooltip: () => t.Get("config.utility.bubble-radar.tooltip")
+        );
+
+        configMenu.AddBoolOption(
+            mod: mod,
+            getValue: () => ModEntry.Config.DoAutoPauseOnNoBait,
+            setValue: value => ModEntry.Config.DoAutoPauseOnNoBait = value,
+            name: () => t.Get("config.utility.auto-pause-no-bait.name"),
+            tooltip: () => t.Get("config.utility.auto-pause-no-bait.tooltip")
         );
 
         configMenu.AddSectionTitle(mod: mod, text: () => t.Get("config.minigame-strategies.name"), tooltip: () => t.Get("config.minigame-strategies.tooltip"));
