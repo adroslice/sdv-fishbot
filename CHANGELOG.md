@@ -60,3 +60,7 @@
 - Replaced "Always Enabled" with Automation Mode, including a new "Stealth" mode
 - Merged Auto-Hit => Auto-Cast, Auto-Stow => Auto-Loot & Auto-Eat options
 - Removed config categories, further config changes under consideration
+
+## Minor Release 0.5.0
+- Added an option to pause automatically after running out of bait, enabled by default
+- Made failed casts pause automatically
