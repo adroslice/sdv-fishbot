@@ -208,7 +208,7 @@ internal sealed class ModEntry : Mod
             FishingState.ReadyToCast when Config.DoAutoPauseOnNoBait && hadBait && (rod.attachments?.Length == 0 || rod.attachments?[0] is null) => PauseNoBait,
             FishingState.ReadyToCast when Config.DoAutoCast && AutomationEnabled => StartCasting,
             FishingState.TimingCast when Config.DoAutoCast => () => _shouldReleaseTimingCast = (rod.castingPower >= (Config.CastDistance - 0.01f)),
-            FishingState.Nibbling when Config.DoAutoCast => () => rod.endUsing(Game1.currentLocation, Game1.player),
+            FishingState.Nibbling when Config.DoAutoHit => () => rod.endUsing(Game1.currentLocation, Game1.player),
             FishingState.Playing when Config.DoAutoPlay => () => _shouldPressFishingButton = MinigameStrategyFishingAutomatonPlus((BobberBar)Game1.activeClickableMenu),
             FishingState.ShowingTreasure when Config.DoAutoLoot => () => AcquireTreasure((ItemGrabMenu)Game1.activeClickableMenu),
             FishingState.FishCaught when Config.DoAutoLoot => () => rod.doneHoldingFish(Game1.player),
@@ -247,6 +247,7 @@ internal sealed class ModEntry : Mod
 
     private void AutoPause(string unlocalizedMessage)
     {
+        if (!AutomationEnabled) return;
         AutomationEnabled = false;
         Game1.activeClickableMenu = new GameMenu();
         if (Config.AutomationMode != "stealth") Game1.addHUDMessage(new(this.Helper.Translation.Get(unlocalizedMessage)) { messageSubject = Game1.player.CurrentItem });

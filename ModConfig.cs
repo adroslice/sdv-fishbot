@@ -13,6 +13,7 @@ public sealed class ModConfig
 
     // Core Automations
     public bool DoAutoCast { get; set; } = true;
+    public bool DoAutoHit { get; set; } = true;
     public bool DoAutoPlay { get; set; } = true;
     public bool DoAutoLoot { get; set; } = true;
 
@@ -69,6 +70,12 @@ public sealed class ModConfig
             name: () => t.Get("config.automations.auto-cast.name"),
             getValue: () => ModEntry.Config.DoAutoCast,
             setValue: value => { ModEntry.Config.DoAutoCast = value; }
+        );
+        configMenu.AddBoolOption(
+            mod: mod,
+            name: () => t.Get("config.automations.auto-hit.name"),
+            getValue: () => ModEntry.Config.DoAutoHit,
+            setValue: value => { ModEntry.Config.DoAutoHit = value; }
         );
         configMenu.AddBoolOption(
             mod: mod,

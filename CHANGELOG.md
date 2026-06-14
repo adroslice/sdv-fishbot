@@ -64,3 +64,7 @@
 ## Minor Release 0.5.0
 - Added an option to pause automatically after running out of bait, enabled by default
 - Made failed casts pause automatically
+
+### Patch 0.5.1
+- Restored the option to separately configure Auto-Cast and Auto-Hit, which were previously merged to simplify the config
+- Made Auto-Pause effects only trigger when full automation is enabled
