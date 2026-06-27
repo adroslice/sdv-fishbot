@@ -19,6 +19,8 @@ public sealed class ModConfig
 
     // Secondary Automations
     public string AutoEatMode { get; set; } = "best";
+    public string AutoBaitMode { get; set; } = "pause";
+    public string AutoTackleMode { get; set; } = "pause";
 
     // Automation Options
     public float CastDistance { get; set; } = 1f;
@@ -27,7 +29,6 @@ public sealed class ModConfig
 
     // Utility
     public bool EnableBubbleRadar { get; set; } = false;
-    public bool DoAutoPauseOnNoBait { get; set; } = true;
 
     // FishingAutomaton+ Strategy Parameters
     public int FA_PredictFrames { get; set; } = 5;
@@ -102,6 +103,34 @@ public sealed class ModConfig
             getValue: () => ModEntry.Config.AutoEatMode,
             setValue: value => ModEntry.Config.AutoEatMode = value
         );
+        configMenu.AddTextOption(
+            mod: mod,
+            name: () => t.Get("config.automations.auto-bait-mode.name"),
+            tooltip: () => t.Get("config.automations.auto-bait-mode.tooltip"),
+            allowedValues: new[] {
+                "disabled",
+                "pause",
+                "equip-or-pause",
+                "equip-or-continue",
+            },
+            formatAllowedValue: value => t.Get($"config.automations.auto-bait-mode.{value}.name"),
+            getValue: () => ModEntry.Config.AutoBaitMode,
+            setValue: value => ModEntry.Config.AutoBaitMode = value
+        );
+        configMenu.AddTextOption(
+            mod: mod,
+            name: () => t.Get("config.automations.auto-tackle-mode.name"),
+            tooltip: () => t.Get("config.automations.auto-tackle-mode.tooltip"),
+            allowedValues: new[] {
+                "disabled",
+                "pause",
+                "equip-or-pause",
+                "equip-or-continue",
+            },
+            formatAllowedValue: value => t.Get($"config.automations.auto-tackle-mode.{value}.name"),
+            getValue: () => ModEntry.Config.AutoTackleMode,
+            setValue: value => ModEntry.Config.AutoTackleMode = value
+        );
         configMenu.AddNumberOption(
             mod: mod,
             name: () => t.Get("config.automations.cast-distance.name"),
@@ -133,21 +162,12 @@ public sealed class ModConfig
             interval: 10,
             formatValue: value => $"{value / 60:D2}:{value % 60:D2}"
         );
-
         configMenu.AddBoolOption(
             mod: mod,
             getValue: () => ModEntry.Config.EnableBubbleRadar,
             setValue: value => ModEntry.Config.EnableBubbleRadar = value,
             name: () => t.Get("config.utility.bubble-radar.name"),
             tooltip: () => t.Get("config.utility.bubble-radar.tooltip")
-        );
-
-        configMenu.AddBoolOption(
-            mod: mod,
-            getValue: () => ModEntry.Config.DoAutoPauseOnNoBait,
-            setValue: value => ModEntry.Config.DoAutoPauseOnNoBait = value,
-            name: () => t.Get("config.utility.auto-pause-no-bait.name"),
-            tooltip: () => t.Get("config.utility.auto-pause-no-bait.tooltip")
         );
 
         configMenu.AddSectionTitle(mod: mod, text: () => t.Get("config.minigame-strategies.name"), tooltip: () => t.Get("config.minigame-strategies.tooltip"));

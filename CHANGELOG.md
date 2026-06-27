@@ -68,3 +68,9 @@
 ### Patch 0.5.1
 - Restored the option to separately configure Auto-Cast and Auto-Hit, which were previously merged to simplify the config
 - Made Auto-Pause effects only trigger when full automation is enabled
+
+### Minor Release 0.6.0
+- Translation Changes
+- Removed old auto pause on no bait setting
+- Added customizable Auto-Attachment options for bait and tackle
+- Auto-Pause effects now show a HUD message in "Always Enabled" but not active mode instead of doing nothing

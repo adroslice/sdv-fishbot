@@ -18,6 +18,7 @@ internal sealed class ModEntry : Mod
     private int? restorableDirection = null;
     private bool pausedTimeToday = false;
     private bool hadBait = false;
+    private bool hadTackle = false;
     private bool wasCasting = false;
     private bool PassedPauseTime => !pausedTimeToday && Game1.timeOfDay % 2400 >= Config.PauseAfterTime && Game1.timeOfDay % 2400 < Config.PauseAfterTime + 100;
     private string fishbotActiveText = "ui.hud.fishbot-active";
@@ -131,7 +132,9 @@ internal sealed class ModEntry : Mod
 
     private void OnButtonsChanged(object? sender, ButtonsChangedEventArgs e)
     {
-        if (Config.ToggleAutomationKey.JustPressed()) AutomationEnabled = !AutomationEnabled;
+        if (!Config.ToggleAutomationKey.JustPressed()) return;
+        hadBait = hadTackle = false;
+        AutomationEnabled = !AutomationEnabled;
     }
 
     // Renders the Activity Indicator and Bubble Radar
@@ -185,8 +188,8 @@ internal sealed class ModEntry : Mod
         if (!Context.IsWorldReady || !(AutomationEnabled || Config.AutomationMode != "toggle") || Game1.player.CurrentTool is not FishingRod rod)
             return;
 
-        if (rod.attachments?.Length > 0 && rod.attachments[0] is not null)
-            hadBait = true;
+        if (rod.attachments[0] is not null) hadBait = true;
+        if (rod.attachments[1] is not null) hadTackle = true;
 
         var state = GetFishingState(rod);
 
@@ -205,7 +208,10 @@ internal sealed class ModEntry : Mod
             FishingState.LowStamina => HandleLowStamina,
             FishingState.ReadyToCast when restorableDirection != null => RestoreDirection,
             FishingState.ReadyToCast when PassedPauseTime => PauseAfterTime,
-            FishingState.ReadyToCast when Config.DoAutoPauseOnNoBait && hadBait && (rod.attachments?.Length == 0 || rod.attachments?[0] is null) => PauseNoBait,
+            FishingState.ReadyToCast when (Config.AutoBaitMode is "equip-or-pause" or "equip-or-continue") && NeedsBait(rod) && FirstBait is Object bait => () => AutoAttach(rod, bait),
+            FishingState.ReadyToCast when (Config.AutoBaitMode is "equip-or-pause" or "pause") && hadBait && NeedsBait(rod) => PauseNoBait,
+            FishingState.ReadyToCast when (Config.AutoTackleMode is "equip-or-pause" or "equip-or-continue") && NeedsTackle(rod) && FirstTackle is Object tackle => () => AutoAttach(rod, tackle),
+            FishingState.ReadyToCast when (Config.AutoTackleMode is "equip-or-pause" or "pause") && hadTackle && NeedsTackle(rod) => PauseNoTackle,
             FishingState.ReadyToCast when Config.DoAutoCast && AutomationEnabled => StartCasting,
             FishingState.TimingCast when Config.DoAutoCast => () => _shouldReleaseTimingCast = (rod.castingPower >= (Config.CastDistance - 0.01f)),
             FishingState.Nibbling when Config.DoAutoHit => () => rod.endUsing(Game1.currentLocation, Game1.player),
@@ -247,10 +253,10 @@ internal sealed class ModEntry : Mod
 
     private void AutoPause(string unlocalizedMessage)
     {
+        if (Config.AutomationMode != "stealth") Game1.addHUDMessage(new(this.Helper.Translation.Get(unlocalizedMessage)) { messageSubject = Game1.player.CurrentItem });
         if (!AutomationEnabled) return;
         AutomationEnabled = false;
         Game1.activeClickableMenu = new GameMenu();
-        if (Config.AutomationMode != "stealth") Game1.addHUDMessage(new(this.Helper.Translation.Get(unlocalizedMessage)) { messageSubject = Game1.player.CurrentItem });
     }
 
     private void PauseAfterTime()
@@ -259,10 +265,26 @@ internal sealed class ModEntry : Mod
         AutoPause("ui.hud.message.time-passed");
     }
 
+    private bool NeedsBait(FishingRod rod) => rod.UpgradeLevel > 1 && rod.attachments?[0] is null;
+    private Object? FirstBait => Game1.player.Items.OfType<Object>().FirstOrDefault(o => o.Category == -21);
     private void PauseNoBait()
     {
         hadBait = false;
         AutoPause("ui.hud.message.no-bait");
+    }
+
+    private bool NeedsTackle(FishingRod rod) => rod.UpgradeLevel > 2 && rod.attachments?[1] is null;
+    private Object? FirstTackle => Game1.player.Items.OfType<Object>().FirstOrDefault(o => o.Category == -22);
+    private void PauseNoTackle()
+    {
+        hadTackle = false;
+        AutoPause("ui.hud.message.no-tackle");
+    }
+
+    private void AutoAttach(FishingRod rod, Object attachment)
+    {
+        Game1.player.Items.Remove(attachment);
+        rod.attach(attachment);
     }
 
     // On low energy, auto-disable fishbot or auto eat as configured
