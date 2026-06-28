@@ -74,3 +74,6 @@
 - Removed old auto pause on no bait setting
 - Added customizable Auto-Attachment options for bait and tackle
 - Auto-Pause effects now show a HUD message in "Always Enabled" but not active mode instead of doing nothing
+
+### Minor Release 0.6.1
+- Fixed Bubble Radar not being at the center of the screen at non-standard zoom levels

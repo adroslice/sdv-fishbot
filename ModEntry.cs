@@ -30,7 +30,7 @@ internal sealed class ModEntry : Mod
         var harmony = new Harmony(ModManifest.UniqueID);
         harmony.Patch(
             original: AccessTools.PropertyGetter("Microsoft.Xna.Framework.GamePlatform:IsActive"),
-            prefix: new HarmonyMethod(this.GetType(), nameof(this.Pre_XNA_GamePlatform_IsActive))
+            prefix: new HarmonyMethod(typeof(ModEntry), nameof(this.Pre_XNA_GamePlatform_IsActive))
         );
         harmony.Patch(
             original: AccessTools.Method(typeof(Game1), "isOneOfTheseKeysDown", new Type[] { typeof(KeyboardState), typeof(InputButton[]) }),
@@ -55,10 +55,7 @@ internal sealed class ModEntry : Mod
         helper.Events.GameLoop.DayStarted += (_, _) =>
         {
             fishbotActiveText = this.Helper.Translation.Get("ui.hud.fishbot-active");
-            pausedTimeToday = false;
-            hadBait = false;
-            wasCasting = false;
-            AutomationEnabled = false;
+            pausedTimeToday = hadBait = hadTackle = wasCasting = AutomationEnabled = false;
         };
         helper.Events.Input.ButtonsChanged += this.OnButtonsChanged;
         helper.Events.GameLoop.UpdateTicked += this.OnUpdate;
@@ -144,9 +141,9 @@ internal sealed class ModEntry : Mod
         if (Config.EnableBubbleRadar && !(Game1.currentLocation.fishSplashPoint.X == 0 && Game1.currentLocation.fishSplashPoint.Y == 0))
         {
             var screenCenter = new Vector2(
-                Game1.viewport.Width / 2,
-                Game1.viewport.Height / 2
-            );
+                            Game1.uiViewport.Width / 2f,
+                            Game1.uiViewport.Height / 2f
+                        );
             var arrowDirection = Vector2.Normalize(new Vector2(
                 Game1.currentLocation.fishSplashPoint.X * 64f - (float)Game1.viewport.X + 32f,
                 Game1.currentLocation.fishSplashPoint.Y * 64f - (float)Game1.viewport.Y + 32f
