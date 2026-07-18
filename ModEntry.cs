@@ -19,7 +19,7 @@ internal sealed class ModEntry : Mod
     private bool pausedTimeToday = false;
     private bool hadBait = false;
     private bool hadTackle = false;
-    private bool wasCasting = false;
+    private bool previousCastedButBobberStillInAir = false;
     private bool PassedPauseTime => !pausedTimeToday && Game1.timeOfDay % 2400 >= Config.PauseAfterTime && Game1.timeOfDay % 2400 < Config.PauseAfterTime + 100;
     private string fishbotActiveText = "ui.hud.fishbot-active";
 
@@ -55,7 +55,7 @@ internal sealed class ModEntry : Mod
         helper.Events.GameLoop.DayStarted += (_, _) =>
         {
             fishbotActiveText = this.Helper.Translation.Get("ui.hud.fishbot-active");
-            pausedTimeToday = hadBait = hadTackle = wasCasting = AutomationEnabled = false;
+            pausedTimeToday = hadBait = hadTackle = previousCastedButBobberStillInAir = AutomationEnabled = false;
         };
         helper.Events.Input.ButtonsChanged += this.OnButtonsChanged;
         helper.Events.GameLoop.UpdateTicked += this.OnUpdate;
@@ -111,7 +111,7 @@ internal sealed class ModEntry : Mod
                 new Rectangle(0, 0, 16, 16),
                 () => this.Helper.Translation.Get("toolbar-icons.toggle-automations.name"),
                 () => this.Helper.Translation.Get("toolbar-icons.toggle-automations.tooltip"),
-                () => { AutomationEnabled = !AutomationEnabled; }
+                () => { hadBait = hadTackle = previousCastedButBobberStillInAir = false; AutomationEnabled = !AutomationEnabled; }
             );
         }
 
@@ -130,7 +130,7 @@ internal sealed class ModEntry : Mod
     private void OnButtonsChanged(object? sender, ButtonsChangedEventArgs e)
     {
         if (!Config.ToggleAutomationKey.JustPressed()) return;
-        hadBait = hadTackle = false;
+        hadBait = hadTackle = previousCastedButBobberStillInAir = false;
         AutomationEnabled = !AutomationEnabled;
     }
 
@@ -190,15 +190,14 @@ internal sealed class ModEntry : Mod
 
         var state = GetFishingState(rod);
 
-        if (state == FishingState.Waiting) wasCasting = false;
         // Auto pause on invalid cast
-        if (AutomationEnabled && state == FishingState.ReadyToCast && wasCasting)
+        if (previousCastedButBobberStillInAir && !rod.castedButBobberStillInAir && !rod.isFishing && !rod.isCasting)
         {
-            wasCasting = false;
+            previousCastedButBobberStillInAir = false;
             AutoPause("ui.hud.message.cast-blocked");
             return;
         }
-        if (state == FishingState.Casting) wasCasting = true;
+        previousCastedButBobberStillInAir = rod.castedButBobberStillInAir;
 
         Action automation = state switch
         {
