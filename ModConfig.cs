@@ -2,6 +2,7 @@ namespace Fishbot;
 
 using StardewModdingAPI;
 using StardewModdingAPI.Utilities;
+using System.Linq;
 
 public sealed class ModConfig
 {
@@ -24,6 +25,7 @@ public sealed class ModConfig
 
     // Automation Options
     public float CastDistance { get; set; } = 1f;
+    public string[] AutoEatPriorityIds { get; set; } = new string[]{};
     public float MaxSGPE { get; set; } = 1.93f; // 125/65e for Iridium Chub and Fisher profession
     public int PauseAfterTime { get; set; } = 0130;
 
@@ -140,6 +142,15 @@ public sealed class ModConfig
             max: 1f,
             interval: 0.01f,
             formatValue: FormatPercentage
+        );
+        configMenu.AddTextOption(
+            mod: mod,
+            name: () => t.Get("config.automations.auto-eat-priority-ids.name"),
+            tooltip: () => t.Get("config.automations.auto-eat-priority-ids.tooltip"),
+            getValue: () => string.Join(',', ModEntry.Config.AutoEatPriorityIds),
+            setValue: value => ModEntry.Config.AutoEatPriorityIds = value
+                .Split(',', StringSplitOptions.TrimEntries | StringSplitOptions.RemoveEmptyEntries)
+                .ToArray()
         );
         configMenu.AddNumberOption(
             mod: mod,

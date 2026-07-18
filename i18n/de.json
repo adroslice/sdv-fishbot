@@ -36,6 +36,8 @@
   "config.automations.auto-tackle-mode.equip-or-pause.name": "Ausrüsten oder Pausieren",
   "config.automations.auto-tackle-mode.equip-or-continue.name": "Ausrüsten oder Fortfahren",
   "config.automations.cast-distance.name": "Auswerf-Distanz",
+  "config.automations.auto-eat-priority-ids.name": "Auto-Essen Prioritäts-Items",
+  "config.automations.auto-eat-priority-ids.tooltip": "Kommagetrennte Item-IDs, die zuerst gegessen werden (in der angegebenen Reihenfolge), bevor auf das erste/beste Essen zurückgegriffen wird.",
   "config.automations.auto-eat-max-sgpe.name": "Auto-Essen max. sGPE",
   "config.automations.auto-eat-max-sgpe.tooltip": "Falls alles verfügbare Essen dieses Verkaufspreis-zu-Energie-Verhältnis überschritt wird statt Auto-Essen pausiert. (Beispiel: 1.93 für Iridium-Kaulbarsch mit Fischer-Beruf)",
   "config.automations.pause-after-time.name": "Pausieren nach",

@@ -36,6 +36,8 @@
   "config.automations.auto-tackle-mode.equip-or-pause.name": "Equip or Pause",
   "config.automations.auto-tackle-mode.equip-or-continue.name": "Equip or Continue",
   "config.automations.cast-distance.name": "Cast Distance",
+  "config.automations.auto-eat-priority-ids.name": "Auto-Eat Priority Foods",
+  "config.automations.auto-eat-priority-ids.tooltip": "Comma-separated item IDs to eat first (in order) before falling back to first/best food.",
   "config.automations.auto-eat-max-sgpe.name": "Auto-Eat Max sGPE",
   "config.automations.auto-eat-max-sgpe.tooltip": "Will pause instead of eating if all available food exceeds this Sell Price to Energy threshold. (e.g. 1.93 for an iridium chub with the Fisher profession)",
   "config.automations.pause-after-time.name": "Pause after",

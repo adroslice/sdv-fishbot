@@ -288,11 +288,22 @@ internal sealed class ModEntry : Mod
     {
         if (Config.AutoEatMode != "disabled")
         {
+            Object? toEat = null;
             var edibles = Game1.player.Items.OfType<Object>().Where(i => i.staminaRecoveredOnConsumption() > 0);
-            var underThreshold = edibles.Where(bestItem => ((float)bestItem.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)bestItem.staminaRecoveredOnConsumption()) <= Config.MaxSGPE);
-            Object? toEat = Config.AutoEatMode == "first"
-                ? underThreshold.FirstOrDefault()
-                : underThreshold.MinBy(i => (float)i.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)i.staminaRecoveredOnConsumption());
+            // Try priority items first, in list order
+            foreach (var id in Config.AutoEatPriorityIds)
+            {
+                toEat = edibles.FirstOrDefault(i => i.QualifiedItemId == id || i.ItemId == id);
+                if (toEat is not null) break;
+            }
+
+            if (toEat is null)
+            {
+                var underThreshold = edibles.Where(bestItem => ((float)bestItem.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)bestItem.staminaRecoveredOnConsumption()) <= Config.MaxSGPE);
+                toEat = Config.AutoEatMode == "first"
+                    ? underThreshold.FirstOrDefault()
+                    : underThreshold.MinBy(i => (float)i.sellToStorePrice(Game1.player.UniqueMultiplayerID) / (float)i.staminaRecoveredOnConsumption());
+            }
 
             if (toEat is Item item)
             {

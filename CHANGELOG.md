@@ -75,5 +75,9 @@
 - Added customizable Auto-Attachment options for bait and tackle
 - Auto-Pause effects now show a HUD message in "Always Enabled" but not active mode instead of doing nothing
 
-### Minor Release 0.6.1
+### Patch 0.6.1
 - Fixed Bubble Radar not being at the center of the screen at non-standard zoom levels
+
+### Patch 0.6.2
+- Fixed buggy detection of invalid casts
+- Added a config option to specify a list of foods to prioritize before eating the first/best food
